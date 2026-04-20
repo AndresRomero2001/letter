@@ -7,7 +7,7 @@
   "progress": {
     "maxPercent": 99.5965617579715,
     "lastPercent": 0,
-    "lastUpdated": "2026-04-20T12:09:42.047Z",
+    "lastUpdated": "2026-04-20T12:12:36.142Z",
     "finishedLogged": true
   },
   "logs": [
@@ -255,40 +255,13 @@
       "fp": "4bfd9484"
     },
     {
-      "ts": "20/4/2026, 14:05:56",
-      "tsISO": "2026-04-20T12:05:56.373Z",
-      "type": "login",
-      "detail": "user",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "c86c3813"
-    },
-    {
-      "ts": "20/4/2026, 14:05:56",
-      "tsISO": "2026-04-20T12:05:56.991Z",
-      "type": "disclaimer_shown",
-      "detail": "",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "c86c3813"
-    },
-    {
-      "ts": "20/4/2026, 14:05:57",
-      "tsISO": "2026-04-20T12:05:57.996Z",
-      "type": "read",
-      "detail": "Aceptó leer la carta",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "c86c3813"
-    },
-    {
-      "ts": "20/4/2026, 14:09:42",
-      "tsISO": "2026-04-20T12:09:42.051Z",
+      "ts": "20/4/2026, 14:05:12",
+      "tsISO": "2026-04-20T12:05:12.996Z",
       "type": "finished",
       "detail": "Carta terminada",
       "role": "user",
       "ip": "88.1.48.71",
-      "fp": "79004092"
+      "fp": "4bfd9484"
     }
   ]
 }

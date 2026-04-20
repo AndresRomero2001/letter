@@ -9,5 +9,15 @@
     "lastPercent": 0,
     "lastUpdated": ""
   },
-  "logs": []
+  "logs": [
+    {
+      "ts": "20/4/2026, 10:13:02",
+      "tsISO": "2026-04-20T08:13:02.252Z",
+      "type": "login",
+      "detail": "admin",
+      "role": "admin",
+      "ip": "88.1.48.71",
+      "fp": "c86c3813"
+    }
+  ]
 }

@@ -73,6 +73,7 @@ if (fs.existsSync(dataPath) && !process.argv.includes("--force-data")) {
     encUserToken: encUserToken,
     disclaimer: DEFAULT_DISCLAIMER,
     letter: DEFAULT_LETTER,
+    textAlign: "justify",
     pageDisabled: false,
     progress: { maxPercent: 0, lastPercent: 0, lastUpdated: "" },
     logs: []
@@ -192,6 +193,14 @@ input:focus{border-color:rgba(139,92,246,.8);box-shadow:0 0 0 4px rgba(139,92,24
   transition:.15s;
 }
 .toolbar button:hover{background:rgba(139,92,246,.3)}
+.toolbar select{
+  height:36px;border:none;border-radius:8px;
+  background:rgba(255,255,255,.08);color:#fff;cursor:pointer;
+  padding:0 8px;font-size:.82rem;outline:none;
+  transition:.15s;
+}
+.toolbar select:hover{background:rgba(139,92,246,.3)}
+.toolbar select option{background:#1f1b3a;color:#fff}
 
 .richtext{
   min-height:200px;max-height:500px;overflow-y:auto;
@@ -657,6 +666,15 @@ input[type=file]{display:none}
         <button onclick="addHR('letter-editor')" title="Separador">&#8213;</button>
         <button onclick="addLink('letter-editor')" title="Enlace">&#128279;</button>
         <button onclick="addImage('letter-editor')" title="Imagen">&#128247;</button>
+        <select title="Tamaño de texto" onchange="applyFontSize(this,'letter-editor')">
+          <option value="">Tamaño</option>
+          <option value="0.8em">Muy pequeño</option>
+          <option value="0.9em">Pequeño</option>
+          <option value="1em">Normal</option>
+          <option value="1.15em">Grande</option>
+          <option value="1.3em">Muy grande</option>
+          <option value="1.6em">Enorme</option>
+        </select>
       </div>
       <input type="file" id="img-letter-editor" accept="image/*" onchange="insertImage(this,'letter-editor')">
       <div id="letter-editor" class="richtext" contenteditable="true" style="min-height:420px;max-height:65vh"></div>
@@ -675,6 +693,15 @@ input[type=file]{display:none}
         <button onclick="addHeading('disc-editor')" title="Título">H</button>
         <button onclick="addLink('disc-editor')" title="Enlace">&#128279;</button>
         <button onclick="addImage('disc-editor')" title="Imagen">&#128247;</button>
+        <select title="Tamaño de texto" onchange="applyFontSize(this,'disc-editor')">
+          <option value="">Tamaño</option>
+          <option value="0.8em">Muy pequeño</option>
+          <option value="0.9em">Pequeño</option>
+          <option value="1em">Normal</option>
+          <option value="1.15em">Grande</option>
+          <option value="1.3em">Muy grande</option>
+          <option value="1.6em">Enorme</option>
+        </select>
       </div>
       <input type="file" id="img-disc-editor" accept="image/*" onchange="insertImage(this,'disc-editor')">
       <div id="disc-editor" class="richtext" contenteditable="true"></div>
@@ -708,6 +735,15 @@ input[type=file]{display:none}
       <div class="field">
         <label>Código de acceso para el usuario</label>
         <input type="text" id="user-code-input" placeholder="Código de usuario">
+      </div>
+      <div class="field">
+        <label>Alineación del texto de la carta</label>
+        <select id="text-align-select" style="width:100%;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.15);color:#fff;font-size:.95rem;outline:none">
+          <option value="justify">Justificado</option>
+          <option value="center">Centrado</option>
+          <option value="left">Izquierda</option>
+        </select>
+        <div style="font-size:.78rem;color:var(--muted);margin-top:6px">Cambia cómo se ve el texto en la carta (vista de usuario y vista previa).</div>
       </div>
       <div class="toggle-row danger-section">
         <div>
@@ -994,7 +1030,9 @@ var maxPercentSession = 0;
 var lastSavedPercent = 0;
 
 function openLetter(){
-  document.getElementById("letter-content").innerHTML = data.letter || "";
+  var lc = document.getElementById("letter-content");
+  lc.innerHTML = data.letter || "";
+  lc.style.textAlign = data.textAlign || "justify";
   var p = (data.progress && data.progress.lastPercent) || 0;
   var maxP = (data.progress && data.progress.maxPercent) || 0;
   maxPercentSession = maxP;
@@ -1107,13 +1145,16 @@ function throttle(fn, wait){
 function renderAdmin(){
   document.getElementById("letter-editor").innerHTML = data.letter || "";
   document.getElementById("disc-editor").innerHTML = data.disclaimer || "";
-  document.getElementById("admin-letter-content").innerHTML = data.letter || "";
+  var adminLetter = document.getElementById("admin-letter-content");
+  adminLetter.innerHTML = data.letter || "";
+  adminLetter.style.textAlign = data.textAlign || "justify";
   document.getElementById("admin-disclaimer-content").innerHTML = data.disclaimer || "";
   var maxP = (data.progress && data.progress.maxPercent) || 0;
   document.getElementById("admin-progress-inner").style.width = maxP.toFixed(1)+"%";
   document.getElementById("admin-progress-label").textContent = Math.round(maxP)+"%";
   document.getElementById("admin-max-progress").textContent = Math.round(maxP)+"%";
   document.getElementById("user-code-input").value = data.userCode || "";
+  document.getElementById("text-align-select").value = data.textAlign || "justify";
   document.getElementById("page-disabled-toggle").checked = !!data.pageDisabled;
   renderLogs();
 }
@@ -1127,6 +1168,31 @@ function addParagraph(id){ focusEditor(id); document.execCommand("formatBlock",f
 function addHR(id){ focusEditor(id); document.execCommand("insertHorizontalRule",false,null); }
 function addLink(id){ var u = prompt("URL del enlace:"); if(u){ focusEditor(id); document.execCommand("createLink",false,u); } }
 function addImage(id){ activeEditor=id; document.getElementById("img-"+id).click(); }
+/* Wrap the current selection in <span style="font-size:X"> so the user can
+   resize chunks of text to whatever size they want. If nothing is selected
+   (or selection is outside the editor), do nothing. */
+function applyFontSize(sel, editorId){
+  var size = sel.value;
+  sel.selectedIndex = 0; // reset to "Tamaño" label
+  if(!size) return;
+  var editor = document.getElementById(editorId);
+  if(!editor) return;
+  var selection = window.getSelection();
+  if(!selection || selection.rangeCount===0) return;
+  var range = selection.getRangeAt(0);
+  // Make sure the selection is inside this editor
+  if(!editor.contains(range.commonAncestorContainer)){ editor.focus(); return; }
+  if(range.collapsed) return; // no text selected
+  var span = document.createElement("span");
+  span.style.fontSize = size;
+  try{
+    span.appendChild(range.extractContents());
+    range.insertNode(span);
+    // Re-select the inserted span so the user can see what changed
+    selection.removeAllRanges();
+    var r = document.createRange(); r.selectNodeContents(span); selection.addRange(r);
+  }catch(e){ console.warn("applyFontSize failed",e); }
+}
 function compressImage(file,maxW,quality,cb){
   var rd = new FileReader();
   rd.onload = function(e){
@@ -1235,6 +1301,11 @@ function saveSettings(){
   var oldCode = data.userCode;
   data.userCode = newCode;
   data.pageDisabled = document.getElementById("page-disabled-toggle").checked;
+  data.textAlign = document.getElementById("text-align-select").value || "justify";
+  // Live-update the admin preview so the admin can compare center vs justify
+  // without switching tabs.
+  var adminLetter = document.getElementById("admin-letter-content");
+  if(adminLetter) adminLetter.style.textAlign = data.textAlign;
   var chain;
   if(newCode !== oldCode){
     // Re-encrypt the user token with the new code
@@ -1344,8 +1415,22 @@ document.addEventListener("click", function(e){
   var panel = document.getElementById("panel-"+name);
   if(panel) panel.classList.remove("hidden");
   if(name==="logs") refreshLogs();
-  if(name==="view-letter") document.getElementById("admin-letter-content").innerHTML = data.letter||"";
+  if(name==="view-letter"){
+    var al = document.getElementById("admin-letter-content");
+    al.innerHTML = data.letter||"";
+    al.style.textAlign = data.textAlign || "justify";
+  }
   if(name==="view-disclaimer") document.getElementById("admin-disclaimer-content").innerHTML = data.disclaimer||"";
+});
+
+/* Live-preview the alignment in the admin when the admin picks a new option
+   in the settings tab — the change isn't persisted until "Guardar", but the
+   "Ver carta" preview updates instantly so the admin can compare. */
+document.addEventListener("change", function(e){
+  if(e.target && e.target.id === "text-align-select"){
+    var al = document.getElementById("admin-letter-content");
+    if(al) al.style.textAlign = e.target.value || "justify";
+  }
 });
 
 // ── Logout / navigation ─────────────────────────────────────────────

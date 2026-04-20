@@ -1166,6 +1166,17 @@ var pendingResumePercent = 0;
 // already covered (where newMax wouldn't advance and persistProgress would
 // otherwise stay silent).
 var sessionNextMilestone = 10;
+// Dwell-time gate on milestone logs: the user has to stay at or above the
+// pending milestone for MILESTONE_DWELL_MS before it counts as "reached".
+// This filters out the very common "scroll to the bottom to see how long the
+// letter is, then scroll back up to actually read it" pattern — a scan takes
+// 2-5 seconds, so none of the decile thresholds get credited, and the
+// "Carta terminada" log doesn't fire at the end of a scan either. Reading
+// the same decile takes much longer than the dwell, so it logs normally.
+var MILESTONE_DWELL_MS = 20000; // 20 s
+var dwellPendingMilestone = 0;  // 0 means nothing pending
+var dwellPendingTimer = null;
+var dwellPendingStartTime = 0;
 
 function openLetter(){
   var lc = document.getElementById("letter-content");
@@ -1189,6 +1200,7 @@ function openLetter(){
   // smooth-scroll into position doesn't spam logs for every decile it crosses
   // en route. If there's no resume (fresh open / no modal), start at 10.
   sessionNextMilestone = (p > 3 && p < 97) ? (Math.floor(p/10)*10 + 10) : 10;
+  resetDwell();
   // Reconcile: if localStorage had a higher percent than what the server
   // knows (previous session's close-time save got cancelled by the browser),
   // push the merged value back so admin dashboards reflect reality. If the
@@ -1240,6 +1252,7 @@ function restartReading(){
   pendingResumePercent = 0;
   // User is going back to 0, so the next session milestone is 10% again.
   sessionNextMilestone = 10;
+  resetDwell();
   if(data){
     if(!data.progress) data.progress = {maxPercent:0,lastPercent:0,lastUpdated:"",finishedLogged:false};
     data.progress.lastPercent = 0;
@@ -1269,6 +1282,34 @@ function updateProgressUI(p){
   if(lbl) lbl.textContent = Math.round(p)+"%";
 }
 
+function resetDwell(){
+  if(dwellPendingTimer){ clearTimeout(dwellPendingTimer); }
+  dwellPendingTimer = null;
+  dwellPendingMilestone = 0;
+  dwellPendingStartTime = 0;
+}
+function fireDwellLog(){
+  // Called when the dwell timer expires (or on tab-hide if enough time
+  // elapsed). Logs the highest decile the user is currently at/above — so a
+  // user who scrolled quickly from 0 to 50 and then parked there for the
+  // dwell window gets "50% leído", not "10% leído".
+  var letterScreen = document.getElementById("letter-screen");
+  if(!letterScreen || letterScreen.classList.contains("hidden")){ resetDwell(); return; }
+  var curP = currentScrollPercent();
+  if(curP < dwellPendingMilestone){ resetDwell(); return; }
+  var highestDecile = Math.min(100, Math.floor(curP/10)*10);
+  while(sessionNextMilestone <= highestDecile) sessionNextMilestone += 10;
+  if(highestDecile >= 100 && data && data.progress && !data.progress.finishedLogged){
+    data.progress.finishedLogged = true;
+    // Persist the finishedLogged flag so it doesn't re-fire on the next visit.
+    saveData(data).catch(function(){});
+    appendLog("finished","Carta terminada");
+  } else {
+    appendLog("progress", highestDecile + "% leído");
+  }
+  resetDwell();
+}
+
 function onScrollTick(){
   if(document.getElementById("letter-screen").classList.contains("hidden")) return;
   var p = currentScrollPercent();
@@ -1279,14 +1320,26 @@ function onScrollTick(){
   // Synchronous local backup — guarantees the continue-modal has a value to
   // read on the next visit even if the network save never completes.
   try { localStorage.setItem(LAST_PERCENT_KEY, String(p)); } catch(e){}
-  // Session-milestone logging: fires the first time the user's CURRENT
-  // position crosses each 10% threshold in this session. Independent from
-  // the max-advance save machinery above, so re-reading territory they've
-  // already covered still shows up in the admin log.
-  if(!isAdmin && p >= sessionNextMilestone){
-    var crossed = sessionNextMilestone;
-    while(p >= sessionNextMilestone) sessionNextMilestone += 10;
-    appendLog("progress", crossed + "% leído");
+  // Dwell-gated milestone logging: enter the pending milestone and arm a
+  // timer; if the user stays at or above that threshold for the dwell window
+  // we log the highest decile reached. If they drop below it first (e.g.
+  // scanned to bottom then scrolled back to start), the timer is cancelled
+  // and nothing is logged.
+  if(!isAdmin){
+    if(p >= sessionNextMilestone){
+      if(dwellPendingMilestone !== sessionNextMilestone){
+        // Starting to count dwell for this milestone (or re-arming after a
+        // previous cancel). Any prior pending timer is for a different
+        // milestone and should be replaced.
+        if(dwellPendingTimer) clearTimeout(dwellPendingTimer);
+        dwellPendingMilestone = sessionNextMilestone;
+        dwellPendingStartTime = Date.now();
+        dwellPendingTimer = setTimeout(fireDwellLog, MILESTONE_DWELL_MS);
+      }
+    } else if(dwellPendingTimer){
+      // User scrolled back below the pending milestone — cancel.
+      resetDwell();
+    }
   }
   scheduleProgressSave();
 }
@@ -1309,15 +1362,10 @@ function persistProgress(force){
   data.progress.lastPercent = p;
   data.progress.lastUpdated = new Date().toISOString();
   lastSavedPercent = newMax;
-  // Progress-milestone logging lives in onScrollTick (session-scoped). Here
-  // we only persist the numbers and log the single "finished" event once.
-  var reached100 = newMax >= 98 && !data.progress.finishedLogged;
-  var tasks = [saveData(data)];
-  if(reached100){
-    data.progress.finishedLogged = true;
-    tasks.push(appendLog("finished","Carta terminada"));
-  }
-  return Promise.all(tasks).catch(function(e){console.warn("progress save failed",e);});
+  // Progress and "finished" logging both live in fireDwellLog (gated by
+  // dwell time) so a quick scroll-to-the-bottom scan doesn't count as a
+  // read. persistProgress only saves the numbers here.
+  return saveData(data).catch(function(e){console.warn("progress save failed",e);});
 }
 
 function resumeReading(){
@@ -1342,7 +1390,21 @@ function attachScrollTracking(){
   scrollTracking = true;
   window.addEventListener("scroll", throttle(onScrollTick, 250));
   document.addEventListener("visibilitychange", function(){
-    if(document.visibilityState==="hidden") persistProgress(true);
+    if(document.visibilityState==="hidden"){
+      // If a dwell timer is pending, decide its fate before tearing down:
+      // fire it if enough time actually elapsed (user did dwell long enough,
+      // we just haven't hit the setTimeout yet), otherwise cancel — we don't
+      // want to credit a milestone the user hadn't earned just because they
+      // closed the tab at the wrong moment.
+      if(dwellPendingTimer){
+        var elapsed = Date.now() - dwellPendingStartTime;
+        clearTimeout(dwellPendingTimer);
+        dwellPendingTimer = null;
+        if(elapsed >= MILESTONE_DWELL_MS) fireDwellLog();
+        else resetDwell();
+      }
+      persistProgress(true);
+    }
   });
   window.addEventListener("beforeunload", function(){ persistProgress(true); });
   // Initial calc in case content fits in viewport

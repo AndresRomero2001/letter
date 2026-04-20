@@ -541,6 +541,15 @@
       "role": "user",
       "ip": "88.1.48.71",
       "fp": "7b71fb52"
+    },
+    {
+      "ts": "20/4/2026, 18:03:54",
+      "tsISO": "2026-04-20T16:03:54.352Z",
+      "type": "read",
+      "detail": "Aceptó leer la carta",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "7b71fb52"
     }
   ],
   "textAlign": "justify",

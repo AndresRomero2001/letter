@@ -1089,9 +1089,49 @@ function routeAfterLogin(){
   }
 }
 
+/* Render helpers for content pasted from Google Docs ─────────────────
+   Google Docs paste produces two bugs we need to fix at render time:
+     1) Body paragraphs wrapped in <h2> — every <p> inside inherits the
+        heading's bold weight. That's why A+/A- appeared to "make text
+        bold": our new <span style="font-size:X"> was dropping the inner
+        <span font-weight:400> override, exposing the h2 default bold.
+     2) Every <p> carries an inline style="text-align:center" so the
+        container's chosen alignment (justify / center / left from the
+        admin settings) never wins.
+   Call renderRichContent(el, html, align) wherever we dump user HTML. */
+function unwrapBogusHeadings(container){
+  if(!container) return;
+  // Snapshot: we mutate as we iterate.
+  var hs = Array.prototype.slice.call(container.querySelectorAll("h1,h2,h3"));
+  hs.forEach(function(h){
+    if(h.querySelector("p,div,ul,ol,blockquote")){
+      var parent = h.parentNode;
+      while(h.firstChild) parent.insertBefore(h.firstChild, h);
+      parent.removeChild(h);
+    }
+  });
+}
+function stripInlineTextAlign(container){
+  if(!container) return;
+  container.querySelectorAll("[style*='text-align']").forEach(function(el){
+    el.style.textAlign = "";
+  });
+}
+function renderRichContent(el, html, align){
+  if(!el) return;
+  el.innerHTML = html || "";
+  unwrapBogusHeadings(el);
+  stripInlineTextAlign(el);
+  el.style.textAlign = align || "justify";
+}
+
 // ── Disclaimer ──────────────────────────────────────────────────────
 function showDisclaimer(){
-  document.getElementById("disclaimer-content").innerHTML = data.disclaimer || "";
+  renderRichContent(
+    document.getElementById("disclaimer-content"),
+    data.disclaimer || "",
+    data.textAlign || "justify"
+  );
   show("disclaimer-screen");
   appendLog("disclaimer_shown","");
 }
@@ -1102,8 +1142,11 @@ function onDisclaimerRead(){
 }
 function onDisclaimerCancel(){
   appendLog("cancel","Canceló la lectura");
-  var fw = document.getElementById("farewell-content");
-  if(fw) fw.innerHTML = (data && data.farewell) || "<p>Respeto tu decisión. Puedes volver cuando quieras leerla, estará aquí esperando.</p>";
+  renderRichContent(
+    document.getElementById("farewell-content"),
+    (data && data.farewell) || "<p>Respeto tu decisión. Puedes volver cuando quieras leerla, estará aquí esperando.</p>",
+    (data && data.textAlign) || "justify"
+  );
   show("farewell-screen");
 }
 
@@ -1111,11 +1154,15 @@ function onDisclaimerCancel(){
 var progressSaveTimer = null;
 var maxPercentSession = 0;
 var lastSavedPercent = 0;
+// Remembered between openLetter() and resumeReading() so the "Continuar"
+// button scrolls to the exact percent we SHOWED in the modal, even if
+// data.progress.lastPercent (from GitHub) is stale and the real value came
+// from the localStorage backup.
+var pendingResumePercent = 0;
 
 function openLetter(){
   var lc = document.getElementById("letter-content");
-  lc.innerHTML = data.letter || "";
-  lc.style.textAlign = data.textAlign || "justify";
+  renderRichContent(lc, data.letter || "", data.textAlign || "justify");
   // Network value is authoritative, but localStorage is a reliable backup for
   // cases where the last scroll save didn't complete before the tab closed
   // (fetches fired in beforeunload are often cancelled by the browser).
@@ -1125,6 +1172,8 @@ function openLetter(){
     if(!isNaN(lsP) && lsP > p) p = lsP;
   } catch(e){}
   var maxP = (data.progress && data.progress.maxPercent) || 0;
+  if(p > maxP) maxP = p;
+  pendingResumePercent = p;
   maxPercentSession = maxP;
   lastSavedPercent = maxP;
   // Start the bar at 0 — it will fill live as the user scrolls. The stored
@@ -1213,11 +1262,18 @@ function persistProgress(force){
 }
 
 function resumeReading(){
-  var p = (data.progress && data.progress.lastPercent) || 0;
-  var doc = document.documentElement;
-  var target = (doc.scrollHeight - doc.clientHeight) * (p/100);
-  window.scrollTo({top:target, behavior:"smooth"});
+  // Use the percent we captured when openLetter() decided to show the modal.
+  // Falling back to data.progress.lastPercent alone would scroll to 0% when
+  // the only record of the user's position is in the localStorage backup.
+  var p = pendingResumePercent || (data.progress && data.progress.lastPercent) || 0;
   dismissContinue();
+  // Defer one frame so layout settles (modal is being hidden, scrollable
+  // height can change slightly) before we compute the target.
+  requestAnimationFrame(function(){
+    var doc = document.documentElement;
+    var target = (doc.scrollHeight - doc.clientHeight) * (p/100);
+    window.scrollTo({top:target, behavior:"smooth"});
+  });
 }
 
 var scrollTracking = false;
@@ -1249,10 +1305,9 @@ function renderAdmin(){
   document.getElementById("letter-editor").innerHTML = data.letter || "";
   document.getElementById("disc-editor").innerHTML = data.disclaimer || "";
   document.getElementById("farewell-editor").innerHTML = data.farewell || "<p>Respeto tu decisión. Puedes volver cuando quieras leerla, estará aquí esperando.</p>";
-  var adminLetter = document.getElementById("admin-letter-content");
-  adminLetter.innerHTML = data.letter || "";
-  adminLetter.style.textAlign = data.textAlign || "justify";
-  document.getElementById("admin-disclaimer-content").innerHTML = data.disclaimer || "";
+  var align = data.textAlign || "justify";
+  renderRichContent(document.getElementById("admin-letter-content"), data.letter || "", align);
+  renderRichContent(document.getElementById("admin-disclaimer-content"), data.disclaimer || "", align);
   var maxP = (data.progress && data.progress.maxPercent) || 0;
   document.getElementById("admin-max-progress").textContent = Math.round(maxP)+"%";
   document.getElementById("admin-progress-inner").style.width = "0%";
@@ -1497,20 +1552,22 @@ function statusLoading(el){ el.className="status"; el.innerHTML='<span class="sp
 function saveLetter(){
   var st = document.getElementById("letter-save-status"); statusLoading(st);
   data.letter = document.getElementById("letter-editor").innerHTML;
+  var align = data.textAlign || "justify";
   saveData(data).then(function(r){
     if(r.content){
       statusOk(st);
-      document.getElementById("admin-letter-content").innerHTML = data.letter;
+      renderRichContent(document.getElementById("admin-letter-content"), data.letter, align);
     } else statusErr(st, r.message||"Error");
   }).catch(function(){ statusErr(st,"Sin conexión"); });
 }
 function saveDisclaimer(){
   var st = document.getElementById("disc-save-status"); statusLoading(st);
   data.disclaimer = document.getElementById("disc-editor").innerHTML;
+  var align = data.textAlign || "justify";
   saveData(data).then(function(r){
     if(r.content){
       statusOk(st);
-      document.getElementById("admin-disclaimer-content").innerHTML = data.disclaimer;
+      renderRichContent(document.getElementById("admin-disclaimer-content"), data.disclaimer, align);
     } else statusErr(st, r.message||"Error");
   }).catch(function(){ statusErr(st,"Sin conexión"); });
 }
@@ -1531,10 +1588,19 @@ function saveSettings(){
   data.userCode = newCode;
   data.pageDisabled = document.getElementById("page-disabled-toggle").checked;
   data.textAlign = getSegmentedValue("text-align-seg") || "justify";
-  // Live-update the admin preview so the admin can compare center vs justify
-  // without switching tabs.
+  // Re-render every admin preview (and user view if it's live) with the new
+  // alignment, stripping any inline text-align from pasted content so the
+  // container's chosen alignment actually wins.
   var adminLetter = document.getElementById("admin-letter-content");
-  if(adminLetter) adminLetter.style.textAlign = data.textAlign;
+  if(adminLetter) renderRichContent(adminLetter, data.letter || "", data.textAlign);
+  var adminDisc = document.getElementById("admin-disclaimer-content");
+  if(adminDisc) renderRichContent(adminDisc, data.disclaimer || "", data.textAlign);
+  var userLetter = document.getElementById("letter-content");
+  if(userLetter && userLetter.innerHTML) renderRichContent(userLetter, data.letter || "", data.textAlign);
+  var userDisc = document.getElementById("disclaimer-content");
+  if(userDisc && userDisc.innerHTML) renderRichContent(userDisc, data.disclaimer || "", data.textAlign);
+  var userFarewell = document.getElementById("farewell-content");
+  if(userFarewell && userFarewell.innerHTML) renderRichContent(userFarewell, data.farewell || "", data.textAlign);
   var chain;
   if(newCode !== oldCode){
     // Re-encrypt the user token with the new code
@@ -1647,12 +1713,13 @@ document.addEventListener("click", function(e){
   var panel = document.getElementById("panel-"+name);
   if(panel) panel.classList.remove("hidden");
   if(name==="logs") refreshLogs();
+  var adminAlign = (data && data.textAlign) || "justify";
   if(name==="view-letter"){
-    var al = document.getElementById("admin-letter-content");
-    al.innerHTML = data.letter||"";
-    al.style.textAlign = data.textAlign || "justify";
+    renderRichContent(document.getElementById("admin-letter-content"), data.letter||"", adminAlign);
   }
-  if(name==="view-disclaimer") document.getElementById("admin-disclaimer-content").innerHTML = data.disclaimer||"";
+  if(name==="view-disclaimer"){
+    renderRichContent(document.getElementById("admin-disclaimer-content"), data.disclaimer||"", adminAlign);
+  }
 });
 
 /* Segmented pill helpers */
@@ -1681,8 +1748,19 @@ document.addEventListener("click", function(e){
   for(var i=0;i<siblings.length;i++) siblings[i].classList.remove("active");
   btn.classList.add("active");
   if(group.id === "text-align-seg"){
+    var newAlign = btn.getAttribute("data-value") || "justify";
+    /* Live-preview across every surface so the admin can compare
+       alignments instantly (not persisted until "Guardar configuración"). */
     var al = document.getElementById("admin-letter-content");
-    if(al) al.style.textAlign = btn.getAttribute("data-value") || "justify";
+    if(al) renderRichContent(al, data.letter || "", newAlign);
+    var ad = document.getElementById("admin-disclaimer-content");
+    if(ad) renderRichContent(ad, data.disclaimer || "", newAlign);
+    var lc = document.getElementById("letter-content");
+    if(lc && lc.innerHTML) renderRichContent(lc, data.letter || "", newAlign);
+    var dc = document.getElementById("disclaimer-content");
+    if(dc && dc.innerHTML) renderRichContent(dc, data.disclaimer || "", newAlign);
+    var fc = document.getElementById("farewell-content");
+    if(fc && fc.innerHTML) renderRichContent(fc, data.farewell || "", newAlign);
   }
 });
 

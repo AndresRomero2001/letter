@@ -371,6 +371,9 @@ input[type=file]{display:none}
   border-radius:16px 16px 0 0;
   border-bottom:1px solid rgba(139,92,246,.18);
 }
+/* Admin preview variant — stacks below the admin topbar (≈60px) so the
+   two sticky elements don't overlap while the admin scrolls the preview. */
+.admin-progress-sticky{ top:60px; z-index:20; border-radius:10px; }
 .progress-outer{
   width:100%;height:10px;background:rgba(139,92,246,.16);border-radius:5px;
   overflow:hidden;position:relative;
@@ -674,8 +677,12 @@ input[type=file]{display:none}
       <p style="font-size:.85rem;color:var(--muted);margin-bottom:12px">Así verá el usuario la carta. Progreso máximo alcanzado: <strong id="admin-max-progress">0%</strong></p>
       <div class="papyrus-preview-bg">
         <div class="letter-wrap" style="padding:0">
-          <div class="progress-label-row" style="margin-bottom:6px;width:100%"><span>Progreso</span><span id="admin-progress-label">0%</span></div>
-          <div class="progress-outer" style="margin-bottom:14px;width:100%"><div class="progress-inner" id="admin-progress-inner"></div></div>
+          <!-- Sticky progress inside preview. top uses var set on the admin topbar
+               so the sticky bar parks itself directly below it instead of colliding. -->
+          <div class="progress-sticky admin-progress-sticky" style="width:100%">
+            <div class="progress-label-row"><span>Progreso</span><span id="admin-progress-label">0%</span></div>
+            <div class="progress-outer"><div class="progress-inner" id="admin-progress-inner"></div></div>
+          </div>
           <div class="papyrus" style="max-width:100%">
             <img class="papyrus-header-img" src="papyrus_header.png" alt="">
             <div class="papyrus-body">
@@ -846,6 +853,7 @@ var GITHUB_API = "${GITHUB_API_FILE}";
 var ADMIN_HASH = "${ADMIN_HASH}";
 var ENC_ADMIN_TOKEN = "${encAdminToken}";
 var ACCEPT_KEY = "letter_accepted_v1";
+var LAST_PERCENT_KEY = "letter_last_percent_v1";
 
 var data = null;
 var isAdmin = false;
@@ -1108,7 +1116,14 @@ function openLetter(){
   var lc = document.getElementById("letter-content");
   lc.innerHTML = data.letter || "";
   lc.style.textAlign = data.textAlign || "justify";
+  // Network value is authoritative, but localStorage is a reliable backup for
+  // cases where the last scroll save didn't complete before the tab closed
+  // (fetches fired in beforeunload are often cancelled by the browser).
   var p = (data.progress && data.progress.lastPercent) || 0;
+  try {
+    var lsP = parseFloat(localStorage.getItem(LAST_PERCENT_KEY));
+    if(!isNaN(lsP) && lsP > p) p = lsP;
+  } catch(e){}
   var maxP = (data.progress && data.progress.maxPercent) || 0;
   maxPercentSession = maxP;
   lastSavedPercent = maxP;
@@ -1130,6 +1145,13 @@ function openLetter(){
 }
 function dismissContinue(){
   document.getElementById("continue-modal").classList.add("hidden");
+}
+function restartReading(){
+  // User chose "empezar de nuevo" — clear the local backup so we don't keep
+  // re-prompting them after a refresh.
+  try { localStorage.removeItem(LAST_PERCENT_KEY); } catch(e){}
+  dismissContinue();
+  window.scrollTo({top:0, behavior:"smooth"});
 }
 
 function currentScrollPercent(){
@@ -1155,6 +1177,9 @@ function onScrollTick(){
   // CURRENT scroll percent so the bar fills/empties as the user scrolls.
   if(p > maxPercentSession) maxPercentSession = p;
   updateProgressUI(p);
+  // Synchronous local backup — guarantees the continue-modal has a value to
+  // read on the next visit even if the network save never completes.
+  try { localStorage.setItem(LAST_PERCENT_KEY, String(p)); } catch(e){}
   scheduleProgressSave();
 }
 function scheduleProgressSave(){
@@ -1279,7 +1304,40 @@ function attachAdminScrollTracking(){
 
 // ── Editor helpers ──────────────────────────────────────────────────
 var activeEditor = "letter-editor";
-function focusEditor(id){ activeEditor=id; document.getElementById(id).focus(); }
+/* Selection memory: save the caret/selection every time it changes inside any
+   .richtext editor. When a toolbar button is clicked the contenteditable can
+   lose focus (and therefore the selection) before the onclick handler runs;
+   we use savedRange to restore it. This is more reliable than just calling
+   event.preventDefault on mousedown, which some browsers don't honour when
+   the listener is attached at the document level. */
+var savedRange = null;
+var savedEditorId = null;
+document.addEventListener("selectionchange", function(){
+  var sel = window.getSelection();
+  if(!sel || sel.rangeCount === 0) return;
+  var r = sel.getRangeAt(0);
+  var n = r.commonAncestorContainer;
+  while(n && n !== document){
+    if(n.nodeType === 1 && n.classList && n.classList.contains("richtext")){
+      savedRange = r.cloneRange();
+      savedEditorId = n.id;
+      return;
+    }
+    n = n.parentNode;
+  }
+});
+function restoreSelection(editorId){
+  var editor = document.getElementById(editorId);
+  if(!editor) return false;
+  editor.focus();
+  if(!savedRange || savedEditorId !== editorId) return false;
+  if(!editor.contains(savedRange.commonAncestorContainer)) return false;
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(savedRange);
+  return !savedRange.collapsed;
+}
+function focusEditor(id){ activeEditor=id; restoreSelection(id) || document.getElementById(id).focus(); }
 function execCmd(cmd,id){ focusEditor(id); document.execCommand(cmd,false,null); }
 function addHeading(id){ focusEditor(id); document.execCommand("formatBlock",false,"h2"); }
 function addParagraph(id){ focusEditor(id); document.execCommand("formatBlock",false,"p"); }
@@ -1309,12 +1367,15 @@ function detectSizeIdx(node){
 function bumpFontSize(editorId, delta){
   var editor = document.getElementById(editorId);
   if(!editor) return;
-  editor.focus();
+  // Restore the selection the user made before they clicked the button. If
+  // they never had one (or the saved range is collapsed), bail without doing
+  // anything — silently resizing nothing is better than wrapping an empty span.
+  if(!restoreSelection(editorId)) return;
   var sel = window.getSelection();
   if(!sel || sel.rangeCount===0) return;
   var range = sel.getRangeAt(0);
   if(!editor.contains(range.commonAncestorContainer)) return;
-  if(range.collapsed) return; // no selection -> nothing to resize
+  if(range.collapsed) return;
   var idx;
   if(delta === 0){
     idx = FONT_SIZE_NORMAL_IDX;
@@ -1323,12 +1384,27 @@ function bumpFontSize(editorId, delta){
     idx = Math.max(0, Math.min(FONT_SIZES.length-1, current + delta));
   }
   var target = FONT_SIZES[idx] + "rem";
-  // Keep inline formatting (bold/italic/etc.) by cloning the selected HTML
+  // Tag the inserted wrapper so we can find it afterwards and re-select its
+  // contents. Without this, execCommand('insertHTML') collapses the caret at
+  // the end of the inserted text, so a second click on A-/A+ would see an
+  // empty selection and do nothing.
+  var markerId = "fontmark_" + Date.now() + "_" + Math.floor(Math.random()*1000);
   var frag = range.cloneContents();
   var tmp = document.createElement("div"); tmp.appendChild(frag);
-  var html = '<span style="font-size:'+target+'">'+tmp.innerHTML+'</span>';
+  var html = '<span id="'+markerId+'" style="font-size:'+target+'">'+tmp.innerHTML+'</span>';
   // execCommand -> native undo/redo support (Ctrl+Z works)
   document.execCommand("insertHTML", false, html);
+  var marker = document.getElementById(markerId);
+  if(marker){
+    var r2 = document.createRange();
+    r2.selectNodeContents(marker);
+    var sel2 = window.getSelection();
+    sel2.removeAllRanges();
+    sel2.addRange(r2);
+    marker.removeAttribute("id");
+    savedRange = r2.cloneRange();
+    savedEditorId = editorId;
+  }
 }
 function compressImage(file,maxW,quality,cb){
   var rd = new FileReader();
@@ -1475,6 +1551,9 @@ function resetProgress(){
   if(!confirm("¿Reiniciar el progreso del usuario? (se perderá el porcentaje actual)")) return;
   var st = document.getElementById("reset-progress-status"); statusLoading(st);
   data.progress = {maxPercent:0,lastPercent:0,lastUpdated:"",finishedLogged:false};
+  // Clear the user's local backup too — admins share the deploy URL so the
+  // LS entry could otherwise stick around on the admin's own browser.
+  try { localStorage.removeItem(LAST_PERCENT_KEY); } catch(e){}
   saveData(data).then(function(r){
     if(r.content){
       document.getElementById("admin-progress-inner").style.width="0%";
@@ -1629,7 +1708,7 @@ document.getElementById("unlock-btn").addEventListener("click", unlock);
 document.getElementById("btn-read").addEventListener("click", onDisclaimerRead);
 document.getElementById("btn-cancel").addEventListener("click", onDisclaimerCancel);
 document.getElementById("btn-continue-resume").addEventListener("click", resumeReading);
-document.getElementById("btn-continue-restart").addEventListener("click", dismissContinue);
+document.getElementById("btn-continue-restart").addEventListener("click", restartReading);
 
 </script>
 </body>

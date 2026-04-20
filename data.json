@@ -6,9 +6,9 @@
   "pageDisabled": false,
   "progress": {
     "maxPercent": 99.5965617579715,
-    "lastPercent": 87.57123473541384,
-    "lastUpdated": "2026-04-20T12:05:12.991Z",
-    "finishedLogged": false
+    "lastPercent": 0,
+    "lastUpdated": "2026-04-20T12:09:42.047Z",
+    "finishedLogged": true
   },
   "logs": [
     {
@@ -280,6 +280,15 @@
       "role": "user",
       "ip": "88.1.48.71",
       "fp": "c86c3813"
+    },
+    {
+      "ts": "20/4/2026, 14:09:42",
+      "tsISO": "2026-04-20T12:09:42.051Z",
+      "type": "finished",
+      "detail": "Carta terminada",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "79004092"
     }
   ]
 }

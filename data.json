@@ -11,7 +11,17 @@
     "finishedLogged": true,
     "lastLoggedPercent": 45.86827205618864
   },
-  "logs": [],
+  "logs": [
+    {
+      "ts": "20/4/2026, 20:50:30",
+      "tsISO": "2026-04-20T18:50:30.643Z",
+      "type": "login",
+      "detail": "admin",
+      "role": "admin",
+      "ip": "88.1.48.71",
+      "fp": "c86c3813"
+    }
+  ],
   "textAlign": "justify",
   "farewell": "<p>Respeto y entiendo tu decisión. La carta seguirá disponible en esta web hasta que al admin le apetezca, pero no tienes por qué volver.</p>"
 }

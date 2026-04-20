@@ -6,8 +6,9 @@
   "pageDisabled": false,
   "progress": {
     "maxPercent": 99.92285029966179,
-    "lastPercent": 99.81674598585828,
-    "lastUpdated": "2026-04-20T11:16:42.009Z"
+    "lastPercent": 0.2537661488269075,
+    "lastUpdated": "2026-04-20T11:17:09.883Z",
+    "finishedLogged": true
   },
   "logs": [
     {
@@ -132,6 +133,15 @@
       "tsISO": "2026-04-20T11:16:25.343Z",
       "type": "read",
       "detail": "Aceptó leer la carta",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "4bfd9484"
+    },
+    {
+      "ts": "20/4/2026, 13:16:42",
+      "tsISO": "2026-04-20T11:16:42.014Z",
+      "type": "finished",
+      "detail": "Carta terminada",
       "role": "user",
       "ip": "88.1.48.71",
       "fp": "4bfd9484"

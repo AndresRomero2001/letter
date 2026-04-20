@@ -487,6 +487,15 @@
       "role": "user",
       "ip": "88.1.48.71",
       "fp": "3be922ff"
+    },
+    {
+      "ts": "20/4/2026, 17:45:41",
+      "tsISO": "2026-04-20T15:45:41.881Z",
+      "type": "disclaimer_shown",
+      "detail": "",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "3be922ff"
     }
   ],
   "textAlign": "justify"

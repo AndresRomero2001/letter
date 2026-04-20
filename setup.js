@@ -1180,17 +1180,24 @@ function openLetter(){
   lastSavedPercent = maxP;
   // Reconcile: if localStorage had a higher percent than what the server knows
   // (previous session's close-time save got cancelled by the browser), push
-  // the merged value back so admin dashboards / logs reflect reality. If the
-  // gap crosses a 10% milestone we also write a progress log so the admin
-  // doesn't lose track of large jumps that happened between persisted saves.
+  // the merged value back so admin dashboards / logs reflect reality. We also
+  // write a progress log if we've crossed a 10% milestone since the LAST
+  // LOGGED percent (not since the server's maxPercent — those can drift apart
+  // when in-session saves updated maxPercent without crossing log milestones).
   if(!isAdmin && maxP > serverMax + 1){
-    if(!data.progress) data.progress = {maxPercent:0,lastPercent:0,lastUpdated:"",finishedLogged:false};
+    if(!data.progress) data.progress = {maxPercent:0,lastPercent:0,lastUpdated:"",finishedLogged:false,lastLoggedPercent:0};
+    if(data.progress.lastLoggedPercent == null) data.progress.lastLoggedPercent = serverMax;
     data.progress.maxPercent = maxP;
     data.progress.lastPercent = p;
     data.progress.lastUpdated = new Date().toISOString();
-    var crossedMilestone = (maxP - serverMax) >= 10;
+    var crossedMilestone = (maxP - data.progress.lastLoggedPercent) >= 10;
     var reachedEnd = maxP >= 98 && !data.progress.finishedLogged;
-    if(reachedEnd) data.progress.finishedLogged = true;
+    if(reachedEnd){
+      data.progress.finishedLogged = true;
+      data.progress.lastLoggedPercent = maxP;
+    } else if(crossedMilestone){
+      data.progress.lastLoggedPercent = maxP;
+    }
     saveData(data).catch(function(){});
     if(reachedEnd){
       appendLog("finished","Carta terminada");
@@ -1218,9 +1225,22 @@ function dismissContinue(){
   document.getElementById("continue-modal").classList.add("hidden");
 }
 function restartReading(){
-  // User chose "empezar de nuevo" — clear the local backup so we don't keep
-  // re-prompting them after a refresh.
+  // User chose "empezar de nuevo" — we need to (1) clear the local backup,
+  // (2) reset data.progress.lastPercent on the server (otherwise the next
+  // openLetter() reads it back and re-shows the Continue modal), and (3)
+  // reset session trackers so any immediate close or scroll-to-0 doesn't
+  // repersist the old resume point. We keep maxPercent as-is — it's a
+  // historical fact that they reached that point once.
   try { localStorage.removeItem(LAST_PERCENT_KEY); } catch(e){}
+  pendingResumePercent = 0;
+  if(data){
+    if(!data.progress) data.progress = {maxPercent:0,lastPercent:0,lastUpdated:"",finishedLogged:false,lastLoggedPercent:0};
+    data.progress.lastPercent = 0;
+    data.progress.lastUpdated = new Date().toISOString();
+    // lastSavedPercent stays at maxP so persistProgress doesn't spam saves
+    // while the user scrolls back toward the top.
+    saveData(data).catch(function(){});
+  }
   dismissContinue();
   window.scrollTo({top:0, behavior:"smooth"});
 }
@@ -1267,18 +1287,34 @@ function persistProgress(force){
   var newMax = Math.max(maxPercentSession, p, (data.progress && data.progress.maxPercent) || 0);
   var delta = newMax - lastSavedPercent;
   if(!force && delta < 2) return Promise.resolve();
-  if(!data.progress) data.progress = {maxPercent:0,lastPercent:0,lastUpdated:""};
+  if(!data.progress) data.progress = {maxPercent:0,lastPercent:0,lastUpdated:"",finishedLogged:false,lastLoggedPercent:0};
+  // Backfill lastLoggedPercent for pre-v4n data — we don't know the real last
+  // logged value so we seed it to the current maxPercent (no retroactive log).
+  if(data.progress.lastLoggedPercent == null) data.progress.lastLoggedPercent = (data.progress.maxPercent || 0);
   data.progress.maxPercent = newMax;
   data.progress.lastPercent = p;
   data.progress.lastUpdated = new Date().toISOString();
   lastSavedPercent = newMax;
   var reached100 = newMax >= 98 && !data.progress.finishedLogged;
-  var tasks = [saveData(data)];
+  // Log on every 10% crossed since the LAST LOG — not since the last save.
+  // A slow reader's saves can fire every 4s with 2-5% deltas each, never
+  // crossing 10% between saves even though they've cumulatively moved 20-30%.
+  // Tracking lastLoggedPercent in data.progress makes the milestone condition
+  // independent of save cadence (and also survives across sessions).
+  var milestoneDelta = newMax - data.progress.lastLoggedPercent;
+  var crossedMilestone = milestoneDelta >= 10;
+  var tasks = [];
   if(reached100){
     data.progress.finishedLogged = true;
+    data.progress.lastLoggedPercent = newMax;
+    tasks.push(saveData(data));
     tasks.push(appendLog("finished","Carta terminada"));
-  } else if(delta >= 10){
+  } else if(crossedMilestone){
+    data.progress.lastLoggedPercent = newMax;
+    tasks.push(saveData(data));
     tasks.push(appendLog("progress", Math.round(newMax)+"% leído"));
+  } else {
+    tasks.push(saveData(data));
   }
   return Promise.all(tasks).catch(function(e){console.warn("progress save failed",e);});
 }
@@ -1695,7 +1731,7 @@ function saveSettings(){
 function resetProgress(){
   if(!confirm("¿Reiniciar el progreso del usuario? (se perderá el porcentaje actual)")) return;
   var st = document.getElementById("reset-progress-status"); statusLoading(st);
-  data.progress = {maxPercent:0,lastPercent:0,lastUpdated:"",finishedLogged:false};
+  data.progress = {maxPercent:0,lastPercent:0,lastUpdated:"",finishedLogged:false,lastLoggedPercent:0};
   // Clear the user's local backup too — admins share the deploy URL so the
   // LS entry could otherwise stick around on the admin's own browser.
   try { localStorage.removeItem(LAST_PERCENT_KEY); } catch(e){}

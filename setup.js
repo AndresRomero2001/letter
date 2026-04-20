@@ -177,8 +177,19 @@ input:focus{border-color:rgba(139,92,246,.8);box-shadow:0 0 0 4px rgba(139,92,24
 .admin-badge{
   display:inline-block;background:rgba(139,92,246,.2);border:1px solid rgba(139,92,246,.4);
   border-radius:8px;padding:4px 12px;font-size:.8rem;font-weight:600;
-  color:var(--accent);margin-bottom:16px;
+  color:var(--accent);
 }
+/* Sticky top bar for admin — keeps the logout button always reachable */
+.admin-topbar{
+  position:sticky;top:0;z-index:40;
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  margin:-28px -28px 18px;padding:14px 28px;
+  background:rgba(14,10,28,0.9);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(139,92,246,.22);
+  border-radius:24px 24px 0 0;
+}
+.admin-topbar .link-btn{font-size:.88rem}
 .tabs{display:flex;gap:4px;margin-bottom:20px;flex-wrap:wrap}
 .tab{
   padding:8px 14px;border-radius:10px;border:none;background:rgba(255,255,255,.06);
@@ -644,7 +655,10 @@ input[type=file]{display:none}
 <!-- ADMIN -->
 <div id="admin-screen" class="screen hidden">
   <div class="card wide fade-in">
-    <span class="admin-badge">&#128737; Administrador</span>
+    <div class="admin-topbar">
+      <span class="admin-badge">&#128737; Administrador</span>
+      <button class="link-btn" onclick="logout()">Cerrar sesión</button>
+    </div>
     <div class="tabs">
       <button class="tab active" data-tab="view-letter">Ver carta</button>
       <button class="tab" data-tab="view-disclaimer">Ver disclaimer</button>
@@ -660,8 +674,8 @@ input[type=file]{display:none}
       <p style="font-size:.85rem;color:var(--muted);margin-bottom:12px">Así verá el usuario la carta. Progreso máximo alcanzado: <strong id="admin-max-progress">0%</strong></p>
       <div class="papyrus-preview-bg">
         <div class="letter-wrap" style="padding:0">
-          <div class="progress-label-row" style="margin-bottom:6px"><span>Progreso</span><span id="admin-progress-label">0%</span></div>
-          <div class="progress-outer" style="margin-bottom:14px"><div class="progress-inner" id="admin-progress-inner"></div></div>
+          <div class="progress-label-row" style="margin-bottom:6px;width:100%"><span>Progreso</span><span id="admin-progress-label">0%</span></div>
+          <div class="progress-outer" style="margin-bottom:14px;width:100%"><div class="progress-inner" id="admin-progress-inner"></div></div>
           <div class="papyrus" style="max-width:100%">
             <img class="papyrus-header-img" src="papyrus_header.png" alt="">
             <div class="papyrus-body">
@@ -811,9 +825,6 @@ input[type=file]{display:none}
       </div>
     </div>
 
-    <div class="footer">
-      <button class="link-btn" onclick="logout()">Cerrar sesión</button>
-    </div>
   </div>
 </div>
 
@@ -1392,6 +1403,14 @@ document.addEventListener("click", function(e){
     e.preventDefault();
     openImgResize(e.target);
   }
+});
+/* Toolbar buttons: prevent mousedown from stealing focus from the
+   contenteditable. Without this, clicking A+/A-/B/I/U collapses the
+   user's selection before the onclick handler runs, so font-size and
+   other commands that depend on a live selection silently do nothing. */
+document.addEventListener("mousedown", function(e){
+  var btn = e.target.closest(".toolbar button");
+  if(btn) e.preventDefault();
 });
 
 // ── Save actions ────────────────────────────────────────────────────

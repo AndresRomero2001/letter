@@ -6,8 +6,8 @@
   "pageDisabled": false,
   "progress": {
     "maxPercent": 100,
-    "lastPercent": 26.563706563706564,
-    "lastUpdated": "2026-04-20T22:28:57.445Z",
+    "lastPercent": 0,
+    "lastUpdated": "2026-04-20T22:29:09.267Z",
     "finishedLogged": true,
     "lastLoggedPercent": 45.86827205618864
   },
@@ -98,6 +98,15 @@
       "tsISO": "2026-04-20T22:29:06.735Z",
       "type": "login",
       "detail": "user",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "4bfd9484"
+    },
+    {
+      "ts": "21/4/2026, 0:29:09",
+      "tsISO": "2026-04-20T22:29:09.273Z",
+      "type": "progress",
+      "detail": "Empezó de nuevo desde 27%",
       "role": "user",
       "ip": "88.1.48.71",
       "fp": "4bfd9484"

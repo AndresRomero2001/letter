@@ -6,8 +6,8 @@
   "pageDisabled": false,
   "progress": {
     "maxPercent": 100,
-    "lastPercent": 26.293436293436294,
-    "lastUpdated": "2026-04-20T19:23:42.320Z",
+    "lastPercent": 34.21402775137807,
+    "lastUpdated": "2026-04-20T19:28:44.799Z",
     "finishedLogged": true,
     "lastLoggedPercent": 45.86827205618864
   },
@@ -74,24 +74,6 @@
       "role": "user",
       "ip": "88.1.48.71",
       "fp": "e17d81d0"
-    },
-    {
-      "ts": "20/4/2026, 21:17:57",
-      "tsISO": "2026-04-20T19:17:57.108Z",
-      "type": "login",
-      "detail": "user",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
-    },
-    {
-      "ts": "20/4/2026, 21:18:54",
-      "tsISO": "2026-04-20T19:18:54.522Z",
-      "type": "progress",
-      "detail": "20% leído",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
     }
   ],
   "textAlign": "justify",

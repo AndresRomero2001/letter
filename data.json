@@ -6,8 +6,8 @@
   "pageDisabled": false,
   "progress": {
     "maxPercent": 100,
-    "lastPercent": 0,
-    "lastUpdated": "2026-04-20T21:15:20.891Z",
+    "lastPercent": 26.563706563706564,
+    "lastUpdated": "2026-04-20T21:16:16.667Z",
     "finishedLogged": true,
     "lastLoggedPercent": 45.86827205618864
   },
@@ -76,22 +76,22 @@
       "fp": "e17d81d0"
     },
     {
-      "ts": "20/4/2026, 22:20:46",
-      "tsISO": "2026-04-20T20:20:46.485Z",
+      "ts": "20/4/2026, 21:17:57",
+      "tsISO": "2026-04-20T19:17:57.108Z",
       "type": "login",
       "detail": "user",
       "role": "user",
       "ip": "88.1.48.71",
-      "fp": "e17d81d0"
+      "fp": "4bfd9484"
     },
     {
-      "ts": "20/4/2026, 22:21:50",
-      "tsISO": "2026-04-20T20:21:50.128Z",
+      "ts": "20/4/2026, 21:18:54",
+      "tsISO": "2026-04-20T19:18:54.522Z",
       "type": "progress",
       "detail": "20% leído",
       "role": "user",
       "ip": "88.1.48.71",
-      "fp": "e17d81d0"
+      "fp": "4bfd9484"
     }
   ],
   "textAlign": "justify",

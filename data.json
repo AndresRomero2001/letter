@@ -7,8 +7,9 @@
   "progress": {
     "maxPercent": 45.86827205618864,
     "lastPercent": 0,
-    "lastUpdated": "2026-04-20T16:03:56.386Z",
-    "finishedLogged": false
+    "lastUpdated": "2026-04-20T16:03:59.431Z",
+    "finishedLogged": false,
+    "lastLoggedPercent": 45.86827205618864
   },
   "logs": [
     {

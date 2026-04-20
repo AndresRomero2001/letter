@@ -228,133 +228,32 @@ input[type=file]{display:none}
   color:rgba(180,218,245,.65);margin-bottom:10px;letter-spacing:1px;
 }
 
+/* Image-based papyrus: header PNG + tiled body PNG + footer PNG */
 .papyrus{
-  position:relative;width:100%;padding:32px 0;
+  position:relative;width:100%;max-width:1000px;margin:0 auto;padding:0;
   filter:drop-shadow(0 22px 50px rgba(10,30,70,.45));
 }
-/* Horizontal cylinder viewed from the side — paper rolled around a rod */
-.papyrus-roll{
-  position:absolute;left:-14px;right:-14px;height:34px;z-index:3;
-  pointer-events:none;
-  /* Stepped bands simulate pixelated side-profile curvature of rolled paper */
-  background:
-    linear-gradient(180deg,
-      #153a5c 0%,   #153a5c 8%,
-      #2c5b80 8%,   #2c5b80 18%,
-      #4b8dba 18%,  #4b8dba 30%,
-      #7ab8dc 30%,  #7ab8dc 42%,
-      #cfe6f4 42%,  #cfe6f4 54%,
-      #a8d5ed 54%,  #a8d5ed 66%,
-      #7ab8dc 66%,  #7ab8dc 76%,
-      #4b8dba 76%,  #4b8dba 86%,
-      #2c5b80 86%,  #2c5b80 94%,
-      #153a5c 94%,  #153a5c 100%);
-  border-radius:3px;
-  box-shadow:
-    0 6px 14px rgba(10,30,70,.45),
-    inset 0 1px 0 rgba(255,255,255,.45),
-    inset 0 -1px 0 rgba(8,22,45,.6);
-  image-rendering:pixelated;
-}
-/* Thin horizontal lines = edges where paper wraps the cylinder */
-.papyrus-roll::after{
-  content:"";position:absolute;top:0;bottom:0;left:18px;right:18px;pointer-events:none;
-  background:
-    linear-gradient(180deg,
-      transparent 24%,
-      rgba(255,255,255,.22) 25%, rgba(255,255,255,.22) 27%,
-      transparent 28%,
-      transparent 62%,
-      rgba(10,25,50,.4) 63%, rgba(10,25,50,.4) 65%,
-      transparent 66%);
-}
-/* LEFT end-cap: small vertical ellipse showing the spiral of rolled paper from the side */
-.papyrus-roll::before{
-  content:"";position:absolute;top:-5px;bottom:-5px;left:-13px;width:24px;
-  pointer-events:none;border-radius:50%;
-  background:
-    radial-gradient(ellipse 60% 55% at 60% 50%,
-      #0e2642 0 10%,
-      #1c4165 10% 20%,
-      #3b6d96 20% 30%,
-      #1c4165 30% 36%,
-      #6ea6cc 36% 48%,
-      #1c4165 48% 54%,
-      #a8d5ed 54% 66%,
-      #3b6d96 66% 72%,
-      #7ab8dc 72% 82%,
-      #1c4165 82% 92%,
-      #0e2642 92% 100%);
-  box-shadow:
-    0 4px 10px rgba(10,30,70,.55),
-    inset 1px 0 2px rgba(255,255,255,.35),
-    inset -1px 0 2px rgba(8,22,45,.5);
-}
-/* RIGHT end-cap (mirror of left — uses element because ::before/::after taken) */
-.papyrus-roll-right{
-  position:absolute;top:-5px;bottom:-5px;right:-13px;width:24px;
-  pointer-events:none;border-radius:50%;z-index:4;
-  background:
-    radial-gradient(ellipse 60% 55% at 40% 50%,
-      #0e2642 0 10%,
-      #1c4165 10% 20%,
-      #3b6d96 20% 30%,
-      #1c4165 30% 36%,
-      #6ea6cc 36% 48%,
-      #1c4165 48% 54%,
-      #a8d5ed 54% 66%,
-      #3b6d96 66% 72%,
-      #7ab8dc 72% 82%,
-      #1c4165 82% 92%,
-      #0e2642 92% 100%);
-  box-shadow:
-    0 4px 10px rgba(10,30,70,.55),
-    inset 1px 0 2px rgba(255,255,255,.35),
-    inset -1px 0 2px rgba(8,22,45,.5);
-}
-.papyrus-roll::before,.papyrus-roll-right{
-  background-blend-mode:normal;
-}
-.papyrus-roll.top{top:0}
-.papyrus-roll.bottom{bottom:0}
-.papyrus-body{
-  position:relative;
-  background:
-    linear-gradient(180deg,
-      rgba(200,230,248,0.14) 0%,
-      rgba(168,213,237,0.20) 40%,
-      rgba(200,230,248,0.14) 100%);
-  backdrop-filter:blur(14px) saturate(150%);
-  -webkit-backdrop-filter:blur(14px) saturate(150%);
-  border-left:1px solid rgba(200,230,248,.35);
-  border-right:1px solid rgba(200,230,248,.35);
-  box-shadow:
-    inset 0 0 100px rgba(120,180,230,.14),
-    inset 50px 0 80px -55px rgba(200,230,248,.18),
-    inset -50px 0 80px -55px rgba(200,230,248,.18),
-    inset 0 24px 40px -25px rgba(230,245,255,.18),
-    0 2px 0 0 rgba(40,80,130,.3);
-  padding:68px 56px 78px;
-  min-height:62vh;
-  overflow:hidden;
-}
-/* Minecraft stained-glass: scattered pixel squares on a 16x16 grid */
-.papyrus-body::before{
-  content:"";position:absolute;inset:0;pointer-events:none;opacity:.85;
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'><rect width='16' height='16' fill='rgba(255,255,255,0)'/><rect x='0' y='0' width='1' height='1' fill='rgba(255,255,255,0.32)'/><rect x='5' y='1' width='1' height='1' fill='rgba(168,213,237,0.45)'/><rect x='11' y='0' width='1' height='1' fill='rgba(255,255,255,0.22)'/><rect x='3' y='3' width='1' height='1' fill='rgba(122,184,220,0.4)'/><rect x='8' y='4' width='1' height='1' fill='rgba(255,255,255,0.38)'/><rect x='14' y='3' width='1' height='1' fill='rgba(200,230,248,0.36)'/><rect x='1' y='6' width='1' height='1' fill='rgba(168,213,237,0.3)'/><rect x='6' y='7' width='1' height='1' fill='rgba(255,255,255,0.3)'/><rect x='12' y='6' width='1' height='1' fill='rgba(122,184,220,0.42)'/><rect x='4' y='9' width='1' height='1' fill='rgba(255,255,255,0.28)'/><rect x='9' y='10' width='1' height='1' fill='rgba(168,213,237,0.4)'/><rect x='15' y='9' width='1' height='1' fill='rgba(255,255,255,0.35)'/><rect x='2' y='12' width='1' height='1' fill='rgba(200,230,248,0.4)'/><rect x='7' y='13' width='1' height='1' fill='rgba(122,184,220,0.34)'/><rect x='13' y='12' width='1' height='1' fill='rgba(255,255,255,0.3)'/><rect x='5' y='15' width='1' height='1' fill='rgba(168,213,237,0.3)'/><rect x='10' y='14' width='1' height='1' fill='rgba(255,255,255,0.26)'/></svg>");
-  background-size:48px 48px;
+.papyrus-header-img,.papyrus-footer-img{
+  display:block;width:100%;height:auto;
   image-rendering:pixelated;
   image-rendering:crisp-edges;
-  mix-blend-mode:screen;
+  pointer-events:none;
+  user-select:none;
 }
-/* Pixelated grid overlay = faint minecraft block outlines */
-.papyrus-body::after{
-  content:"";position:absolute;inset:0;pointer-events:none;
-  background:
-    linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px) 0 0/48px 48px,
-    linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px) 0 0/48px 48px,
-    radial-gradient(ellipse at 28% 18%, rgba(235,246,253,.18), transparent 45%),
-    radial-gradient(ellipse at 75% 85%, rgba(180,220,245,.12), transparent 50%);
+/* Small negative margins so the PNG layers overlap seamlessly */
+.papyrus-header-img{margin-bottom:-1px}
+.papyrus-footer-img{margin-top:-1px}
+.papyrus-body{
+  position:relative;
+  /* body tile repeats vertically, stretched to container width */
+  background-image:url('papyrus_body.png');
+  background-repeat:repeat-y;
+  background-size:100% auto;
+  background-position:top center;
+  image-rendering:pixelated;
+  padding:24px 10% 32px;
+  min-height:40vh;
+  overflow:hidden;
 }
 .letter-content{
   position:relative;z-index:1;
@@ -460,14 +359,9 @@ input[type=file]{display:none}
   .card{padding:28px 20px}
   .card.wide{padding:20px 16px}
   h1{font-size:1.2rem}
-  .papyrus-body{padding:54px 24px 62px}
-  .letter-content{font-size:1.05rem;line-height:1.85;text-align:left}
+  .papyrus-body{padding:18px 7% 26px}
+  .letter-content{font-size:1.02rem;line-height:1.8;text-align:left}
   .letter-content p{text-indent:1.2em}
-  .papyrus-roll{height:28px;left:-10px;right:-10px}
-  .papyrus-roll::before,.papyrus-roll-right{width:20px;top:-4px;bottom:-4px}
-  .papyrus-roll::before{left:-11px}
-  .papyrus-roll-right{right:-11px}
-  .papyrus{padding:26px 0}
 }
 </style>
 </head>
@@ -533,7 +427,7 @@ input[type=file]{display:none}
     <div class="progress-outer"><div class="progress-inner" id="progress-inner"></div></div>
 
     <div class="papyrus">
-      <div class="papyrus-roll top"><div class="papyrus-roll-right"></div></div>
+      <img class="papyrus-header-img" src="papyrus_header.png" alt="">
       <div class="papyrus-body">
         <div id="continue-banner" class="continue-banner hidden">
           <span class="text">La última vez llegaste al <strong id="continue-percent">0%</strong>. ¿Quieres seguir desde ahí?</span>
@@ -541,7 +435,7 @@ input[type=file]{display:none}
         </div>
         <div id="letter-content" class="letter-content"></div>
       </div>
-      <div class="papyrus-roll bottom"><div class="papyrus-roll-right"></div></div>
+      <img class="papyrus-footer-img" src="papyrus_footer.png" alt="">
     </div>
   </div>
 </div>
@@ -566,11 +460,11 @@ input[type=file]{display:none}
         <div class="letter-wrap" style="padding:0">
           <div class="progress-outer"><div class="progress-inner" id="admin-progress-inner"></div></div>
           <div class="papyrus" style="max-width:100%">
-            <div class="papyrus-roll top"><div class="papyrus-roll-right"></div></div>
+            <img class="papyrus-header-img" src="papyrus_header.png" alt="">
             <div class="papyrus-body">
               <div id="admin-letter-content" class="letter-content"></div>
             </div>
-            <div class="papyrus-roll bottom"><div class="papyrus-roll-right"></div></div>
+            <img class="papyrus-footer-img" src="papyrus_footer.png" alt="">
           </div>
         </div>
       </div>
@@ -678,7 +572,7 @@ input[type=file]{display:none}
 <script>
 var GITHUB_API = "https://api.github.com/repos/AndresRomero2001/letter/contents/data.json";
 var ADMIN_HASH = "d8e02dc389f474320bf6ca93f9ae00fce62e319a52b29e7de04cb0658dda168d";
-var ENC_ADMIN_TOKEN = "b31e88babe8e0c9ac096e94c65deece3:1927633985012c42c5265250:192ecef71b57d868a55ee3834ede823d:34285fab07b550c4a806bcd1659daae842545d57753bd17830637bbcf408f6e468cb4d0abdc9d41c";
+var ENC_ADMIN_TOKEN = "407f8c9307c300e719ea157f91f7309f:bd41e62da292785eab05c2e2:4ebf50da44586468d6b86d05c316bc50:26df234febd967927e201ee2628f29825923093dd70a5ebd4ba0e663b25e54778f0f5c765a0bb09d";
 var ACCEPT_KEY = "letter_accepted_v1";
 
 var data = null;

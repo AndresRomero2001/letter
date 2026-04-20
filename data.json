@@ -47,6 +47,15 @@
       "role": "user",
       "ip": "88.1.48.71",
       "fp": "e17d81d0"
+    },
+    {
+      "ts": "20/4/2026, 21:16:15",
+      "tsISO": "2026-04-20T19:16:15.855Z",
+      "type": "progress",
+      "detail": "10% leído",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "e17d81d0"
     }
   ],
   "textAlign": "justify",

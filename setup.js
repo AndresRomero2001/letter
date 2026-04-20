@@ -1159,6 +1159,13 @@ var lastSavedPercent = 0;
 // data.progress.lastPercent (from GitHub) is stale and the real value came
 // from the localStorage backup.
 var pendingResumePercent = 0;
+// Session-scoped milestone tracker — fires a "progress" log the first time
+// the user's CURRENT scroll position crosses each 10% boundary in THIS
+// session. Independent from maxPercent/lastSavedPercent, so the admin sees
+// live reading activity even when the user is re-reading territory they've
+// already covered (where newMax wouldn't advance and persistProgress would
+// otherwise stay silent).
+var sessionNextMilestone = 10;
 
 function openLetter(){
   var lc = document.getElementById("letter-content");
@@ -1178,31 +1185,28 @@ function openLetter(){
   pendingResumePercent = p;
   maxPercentSession = maxP;
   lastSavedPercent = maxP;
-  // Reconcile: if localStorage had a higher percent than what the server knows
-  // (previous session's close-time save got cancelled by the browser), push
-  // the merged value back so admin dashboards / logs reflect reality. We also
-  // write a progress log if we've crossed a 10% milestone since the LAST
-  // LOGGED percent (not since the server's maxPercent — those can drift apart
-  // when in-session saves updated maxPercent without crossing log milestones).
+  // Seed the session milestone just past the user's resume point so the
+  // smooth-scroll into position doesn't spam logs for every decile it crosses
+  // en route. If there's no resume (fresh open / no modal), start at 10.
+  sessionNextMilestone = (p > 3 && p < 97) ? (Math.floor(p/10)*10 + 10) : 10;
+  // Reconcile: if localStorage had a higher percent than what the server
+  // knows (previous session's close-time save got cancelled by the browser),
+  // push the merged value back so admin dashboards reflect reality. If the
+  // gap crosses a 10% milestone we also write a progress log so the jump
+  // isn't lost entirely — session-milestone logs from the previous session
+  // may not have reached GitHub either.
   if(!isAdmin && maxP > serverMax + 1){
-    if(!data.progress) data.progress = {maxPercent:0,lastPercent:0,lastUpdated:"",finishedLogged:false,lastLoggedPercent:0};
-    if(data.progress.lastLoggedPercent == null) data.progress.lastLoggedPercent = serverMax;
+    if(!data.progress) data.progress = {maxPercent:0,lastPercent:0,lastUpdated:"",finishedLogged:false};
     data.progress.maxPercent = maxP;
     data.progress.lastPercent = p;
     data.progress.lastUpdated = new Date().toISOString();
-    var crossedMilestone = (maxP - data.progress.lastLoggedPercent) >= 10;
     var reachedEnd = maxP >= 98 && !data.progress.finishedLogged;
-    if(reachedEnd){
-      data.progress.finishedLogged = true;
-      data.progress.lastLoggedPercent = maxP;
-    } else if(crossedMilestone){
-      data.progress.lastLoggedPercent = maxP;
-    }
+    if(reachedEnd) data.progress.finishedLogged = true;
     saveData(data).catch(function(){});
     if(reachedEnd){
       appendLog("finished","Carta terminada");
-    } else if(crossedMilestone){
-      appendLog("progress", Math.round(maxP)+"% leído");
+    } else if((maxP - serverMax) >= 10){
+      appendLog("progress", Math.round(maxP)+"% leído (recuperado)");
     }
   }
   // Start the bar at 0 — it will fill live as the user scrolls. The stored
@@ -1231,16 +1235,20 @@ function restartReading(){
   // reset session trackers so any immediate close or scroll-to-0 doesn't
   // repersist the old resume point. We keep maxPercent as-is — it's a
   // historical fact that they reached that point once.
+  var fromPercent = Math.round(pendingResumePercent || 0);
   try { localStorage.removeItem(LAST_PERCENT_KEY); } catch(e){}
   pendingResumePercent = 0;
+  // User is going back to 0, so the next session milestone is 10% again.
+  sessionNextMilestone = 10;
   if(data){
-    if(!data.progress) data.progress = {maxPercent:0,lastPercent:0,lastUpdated:"",finishedLogged:false,lastLoggedPercent:0};
+    if(!data.progress) data.progress = {maxPercent:0,lastPercent:0,lastUpdated:"",finishedLogged:false};
     data.progress.lastPercent = 0;
     data.progress.lastUpdated = new Date().toISOString();
     // lastSavedPercent stays at maxP so persistProgress doesn't spam saves
     // while the user scrolls back toward the top.
     saveData(data).catch(function(){});
   }
+  if(!isAdmin) appendLog("progress", "Empezó de nuevo desde "+fromPercent+"%");
   dismissContinue();
   window.scrollTo({top:0, behavior:"smooth"});
 }
@@ -1271,6 +1279,15 @@ function onScrollTick(){
   // Synchronous local backup — guarantees the continue-modal has a value to
   // read on the next visit even if the network save never completes.
   try { localStorage.setItem(LAST_PERCENT_KEY, String(p)); } catch(e){}
+  // Session-milestone logging: fires the first time the user's CURRENT
+  // position crosses each 10% threshold in this session. Independent from
+  // the max-advance save machinery above, so re-reading territory they've
+  // already covered still shows up in the admin log.
+  if(!isAdmin && p >= sessionNextMilestone){
+    var crossed = sessionNextMilestone;
+    while(p >= sessionNextMilestone) sessionNextMilestone += 10;
+    appendLog("progress", crossed + "% leído");
+  }
   scheduleProgressSave();
 }
 function scheduleProgressSave(){
@@ -1287,34 +1304,18 @@ function persistProgress(force){
   var newMax = Math.max(maxPercentSession, p, (data.progress && data.progress.maxPercent) || 0);
   var delta = newMax - lastSavedPercent;
   if(!force && delta < 2) return Promise.resolve();
-  if(!data.progress) data.progress = {maxPercent:0,lastPercent:0,lastUpdated:"",finishedLogged:false,lastLoggedPercent:0};
-  // Backfill lastLoggedPercent for pre-v4n data — we don't know the real last
-  // logged value so we seed it to the current maxPercent (no retroactive log).
-  if(data.progress.lastLoggedPercent == null) data.progress.lastLoggedPercent = (data.progress.maxPercent || 0);
+  if(!data.progress) data.progress = {maxPercent:0,lastPercent:0,lastUpdated:"",finishedLogged:false};
   data.progress.maxPercent = newMax;
   data.progress.lastPercent = p;
   data.progress.lastUpdated = new Date().toISOString();
   lastSavedPercent = newMax;
+  // Progress-milestone logging lives in onScrollTick (session-scoped). Here
+  // we only persist the numbers and log the single "finished" event once.
   var reached100 = newMax >= 98 && !data.progress.finishedLogged;
-  // Log on every 10% crossed since the LAST LOG — not since the last save.
-  // A slow reader's saves can fire every 4s with 2-5% deltas each, never
-  // crossing 10% between saves even though they've cumulatively moved 20-30%.
-  // Tracking lastLoggedPercent in data.progress makes the milestone condition
-  // independent of save cadence (and also survives across sessions).
-  var milestoneDelta = newMax - data.progress.lastLoggedPercent;
-  var crossedMilestone = milestoneDelta >= 10;
-  var tasks = [];
+  var tasks = [saveData(data)];
   if(reached100){
     data.progress.finishedLogged = true;
-    data.progress.lastLoggedPercent = newMax;
-    tasks.push(saveData(data));
     tasks.push(appendLog("finished","Carta terminada"));
-  } else if(crossedMilestone){
-    data.progress.lastLoggedPercent = newMax;
-    tasks.push(saveData(data));
-    tasks.push(appendLog("progress", Math.round(newMax)+"% leído"));
-  } else {
-    tasks.push(saveData(data));
   }
   return Promise.all(tasks).catch(function(e){console.warn("progress save failed",e);});
 }
@@ -1324,6 +1325,7 @@ function resumeReading(){
   // Falling back to data.progress.lastPercent alone would scroll to 0% when
   // the only record of the user's position is in the localStorage backup.
   var p = pendingResumePercent || (data.progress && data.progress.lastPercent) || 0;
+  if(!isAdmin) appendLog("progress", "Continuó desde "+Math.round(p)+"%");
   dismissContinue();
   // Defer one frame so layout settles (modal is being hidden, scrollable
   // height can change slightly) before we compute the target.
@@ -1731,7 +1733,7 @@ function saveSettings(){
 function resetProgress(){
   if(!confirm("¿Reiniciar el progreso del usuario? (se perderá el porcentaje actual)")) return;
   var st = document.getElementById("reset-progress-status"); statusLoading(st);
-  data.progress = {maxPercent:0,lastPercent:0,lastUpdated:"",finishedLogged:false,lastLoggedPercent:0};
+  data.progress = {maxPercent:0,lastPercent:0,lastUpdated:"",finishedLogged:false};
   // Clear the user's local backup too — admins share the deploy URL so the
   // LS entry could otherwise stick around on the admin's own browser.
   try { localStorage.removeItem(LAST_PERCENT_KEY); } catch(e){}

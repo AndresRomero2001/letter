@@ -176,13 +176,28 @@ input[type=file]{display:none}
 .disclaimer-card{
   background:var(--card);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border:1px solid var(--border);border-radius:24px;
-  padding:36px 32px;max-width:520px;width:100%;
+  padding:36px 36px;max-width:680px;width:100%;
   box-shadow:0 8px 32px rgba(0,0,0,.3);
 }
 .disclaimer-card .icon{font-size:44px;text-align:center;margin-bottom:12px}
 .disclaimer-content{
   line-height:1.7;font-size:.98rem;color:rgba(255,255,255,.9);
-  margin-bottom:28px;max-height:50vh;overflow-y:auto;padding-right:4px;
+  margin-bottom:28px;max-height:55vh;overflow-y:auto;padding-right:10px;
+  /* Firefox */
+  scrollbar-width:thin;
+  scrollbar-color:rgba(139,92,246,.55) rgba(255,255,255,.05);
+}
+/* WebKit (Chrome/Edge/Safari) — slim purple scrollbar that matches the theme */
+.disclaimer-content::-webkit-scrollbar{width:8px}
+.disclaimer-content::-webkit-scrollbar-track{
+  background:rgba(255,255,255,.04);border-radius:4px;margin:4px 0;
+}
+.disclaimer-content::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg,rgba(139,92,246,.55),rgba(109,40,217,.75));
+  border-radius:4px;border:1px solid rgba(255,255,255,.08);
+}
+.disclaimer-content::-webkit-scrollbar-thumb:hover{
+  background:linear-gradient(180deg,rgba(167,139,250,.7),rgba(139,92,246,.9));
 }
 .disclaimer-content h2{font-size:1.25rem;margin-bottom:10px;color:#fff;text-align:center}
 .disclaimer-content p{margin-bottom:10px}
@@ -221,14 +236,15 @@ input[type=file]{display:none}
   border-bottom:1px solid rgba(139,92,246,.18);
 }
 .progress-outer{
-  width:100%;height:6px;background:rgba(139,92,246,.14);border-radius:3px;
+  width:100%;height:10px;background:rgba(139,92,246,.16);border-radius:5px;
   overflow:hidden;position:relative;
-  border:1px solid rgba(139,92,246,.28);
+  border:1px solid rgba(139,92,246,.35);
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.35);
 }
 .progress-inner{
-  height:100%;width:0%;border-radius:3px;transition:width .3s ease;
+  height:100%;width:0%;border-radius:5px;transition:width .3s ease;
   background:#8b5cf6;
-  box-shadow:0 0 10px rgba(139,92,246,.55);
+  box-shadow:0 0 10px rgba(139,92,246,.6);
 }
 .progress-label-row{
   display:flex;justify-content:space-between;font-size:.78rem;
@@ -241,15 +257,25 @@ input[type=file]{display:none}
   filter:drop-shadow(0 22px 50px rgba(0,0,0,.55));
 }
 .papyrus-header-img,.papyrus-footer-img{
-  display:block;width:100%;height:auto;
+  display:block;width:100%;
   image-rendering:pixelated;
   image-rendering:crisp-edges;
   pointer-events:none;
   user-select:none;
 }
-/* Small negative margins so the PNG layers overlap seamlessly */
-.papyrus-header-img{margin-bottom:-1px}
-.papyrus-footer-img{margin-top:-1px}
+/* Crop the empty "scroll interior" out of the header/footer PNGs so the
+   title sits right below the roll and the last paragraph sits right above
+   the closing roll — reduces the big empty gap the user complained about. */
+.papyrus-header-img{
+  height:clamp(140px, 22vw, 280px);
+  object-fit:cover;object-position:center top;
+  margin-bottom:-1px;
+}
+.papyrus-footer-img{
+  height:clamp(120px, 18vw, 240px);
+  object-fit:cover;object-position:center bottom;
+  margin-top:-1px;
+}
 .papyrus-body{
   position:relative;
   /* body tile repeats vertically, stretched to container width */
@@ -264,21 +290,26 @@ input[type=file]{display:none}
 }
 /* Inner text column: narrower than the papyrus body so the text fits inside
    the "paper" region (the body is narrower than the header/footer rolls).
-   On desktop/laptop the column is wider so the letter uses more horizontal
-   space; the mobile media query overrides this to 100%. */
+   A soft dark wash sits behind the text to boost contrast over the busy
+   pixelated papyrus without hiding it. */
 .letter-column{
-  position:relative;z-index:1;
-  max-width:760px;margin:0 auto;padding:0;
+  position:relative;z-index:3;
+  max-width:760px;margin:0 auto;
+  padding:18px 26px;
+  background:rgba(12,8,22,.55);
+  border-radius:6px;
+  box-shadow:
+    0 0 30px 10px rgba(12,8,22,.45),
+    inset 0 0 0 1px rgba(246,224,160,.06);
 }
 .letter-content{
   font-family:'EB Garamond','Cormorant Garamond',Georgia,serif;
-  font-size:1.2rem;line-height:1.95;color:#f5eed6;
+  font-size:1.2rem;line-height:1.95;color:#faf3df;
   text-align:justify;hyphens:auto;
   letter-spacing:.2px;
   text-shadow:
     0 1px 2px rgba(0,0,0,.95),
-    0 0 4px rgba(0,0,0,.75),
-    0 0 10px rgba(0,0,0,.55);
+    0 0 6px rgba(0,0,0,.75);
 }
 /* Headings: use the body serif (EB Garamond) so user's case is preserved
    (Cinzel was forcing all-caps / small-caps). Gold color + text-shadow keeps
@@ -394,9 +425,12 @@ input[type=file]{display:none}
     background:rgba(14,10,28,0.92);
   }
   .papyrus{max-width:100%;filter:none}
-  .papyrus-body{padding:8px 6% 14px}
-  .letter-column{max-width:100%;padding:0}
+  .papyrus-body{padding:6px 4% 12px}
+  .letter-column{max-width:100%;padding:12px 14px}
   .letter-content{font-size:1.02rem;line-height:1.8;text-align:left}
+  /* Shorter cropped header/footer on small screens */
+  .papyrus-header-img{height:clamp(90px, 28vw, 160px)}
+  .papyrus-footer-img{height:clamp(80px, 22vw, 140px)}
 }
 </style>
 </head>
@@ -496,12 +530,11 @@ input[type=file]{display:none}
 
     <!-- Panel: view letter (admin sees the papyrus) -->
     <div id="panel-view-letter" class="panel">
-      <p style="font-size:.85rem;color:var(--muted);margin-bottom:12px">Así verá el usuario la carta. Mostrando progreso: <strong id="admin-progress-label">0%</strong> (m&aacute;ximo: <strong id="admin-max-progress">0%</strong>)</p>
+      <p style="font-size:.85rem;color:var(--muted);margin-bottom:12px">Así verá el usuario la carta. Progreso máximo alcanzado: <strong id="admin-max-progress">0%</strong></p>
       <div class="papyrus-preview-bg">
         <div class="letter-wrap" style="padding:0">
-          <div class="progress-sticky" style="margin:0 0 14px;border-radius:10px">
-            <div class="progress-outer"><div class="progress-inner" id="admin-progress-inner"></div></div>
-          </div>
+          <div class="progress-label-row" style="margin-bottom:6px"><span>Progreso</span><span id="admin-progress-label">0%</span></div>
+          <div class="progress-outer" style="margin-bottom:14px"><div class="progress-inner" id="admin-progress-inner"></div></div>
           <div class="papyrus" style="max-width:100%">
             <img class="papyrus-header-img" src="papyrus_header.png" alt="">
             <div class="papyrus-body">
@@ -617,7 +650,7 @@ input[type=file]{display:none}
 <script>
 var GITHUB_API = "https://api.github.com/repos/AndresRomero2001/letter/contents/data.json";
 var ADMIN_HASH = "d8e02dc389f474320bf6ca93f9ae00fce62e319a52b29e7de04cb0658dda168d";
-var ENC_ADMIN_TOKEN = "c5afc72ee2c31add57e369e0678bd642:5bedc43655c1797625dae6aa:47dacca675c83033790affc08bd88b25:f324bc79373ac5e4f069066f4fda2deecbdabebc676e503abd8c360176302ebb2143850307af3ccf";
+var ENC_ADMIN_TOKEN = "3895516629b8db1dff2402c93a86e7ec:4166961b294989df03bdaba2:2aeae384ea77ef2559bed6098aea1b7e:c7e9f0b5037f455c14ef3d17d75c7ff93264742a3fb6b31a830479198b04b4d93c08ed3dad66e045";
 var ACCEPT_KEY = "letter_accepted_v1";
 
 var data = null;
@@ -889,7 +922,10 @@ function openLetter(){
   } else {
     banner.classList.add("hidden");
   }
-  updateProgressUI(maxP);
+  // Start the bar at 0 — it will fill live as the user scrolls. The stored
+  // maxP is still used for persistence / logging, it just isn't reflected
+  // in the visible bar.
+  updateProgressUI(0);
   show("letter-screen");
   window.scrollTo(0,0);
   attachScrollTracking();
@@ -914,9 +950,10 @@ function updateProgressUI(p){
 function onScrollTick(){
   if(document.getElementById("letter-screen").classList.contains("hidden")) return;
   var p = currentScrollPercent();
-  // Update UI using max of current session max and current
+  // Track max in memory (used when persisting to data.json) but display the
+  // CURRENT scroll percent so the bar fills/empties as the user scrolls.
   if(p > maxPercentSession) maxPercentSession = p;
-  updateProgressUI(maxPercentSession);
+  updateProgressUI(p);
   scheduleProgressSave();
 }
 function scheduleProgressSave(){
@@ -987,10 +1024,9 @@ function renderAdmin(){
   document.getElementById("disc-editor").innerHTML = data.disclaimer || "";
   document.getElementById("admin-letter-content").innerHTML = data.letter || "";
   document.getElementById("admin-disclaimer-content").innerHTML = data.disclaimer || "";
-  var p = (data.progress && data.progress.lastPercent) || 0;
   var maxP = (data.progress && data.progress.maxPercent) || 0;
   document.getElementById("admin-progress-inner").style.width = maxP.toFixed(1)+"%";
-  document.getElementById("admin-progress-label").textContent = Math.round(p)+"%";
+  document.getElementById("admin-progress-label").textContent = Math.round(maxP)+"%";
   document.getElementById("admin-max-progress").textContent = Math.round(maxP)+"%";
   document.getElementById("user-code-input").value = data.userCode || "";
   document.getElementById("page-disabled-toggle").checked = !!data.pageDisabled;
@@ -1133,7 +1169,8 @@ function resetProgress(){
   saveData(data).then(function(r){
     if(r.content){
       document.getElementById("admin-progress-inner").style.width="0%";
-      document.getElementById("admin-progress-label").textContent="0%";
+      var resetLabel = document.getElementById("admin-progress-label");
+      if(resetLabel) resetLabel.textContent="0%";
       document.getElementById("admin-max-progress").textContent="0%";
       statusOk(st);
     } else statusErr(st, r.message||"Error");
@@ -1150,10 +1187,9 @@ function refreshLogs(){
     renderLogs();
     // Also refresh progress indicators in view-letter tab
     var maxP = (data.progress && data.progress.maxPercent) || 0;
-    var p = (data.progress && data.progress.lastPercent) || 0;
     var api = document.getElementById("admin-progress-inner");
     if(api) api.style.width = maxP.toFixed(1)+"%";
-    var al = document.getElementById("admin-progress-label"); if(al) al.textContent = Math.round(p)+"%";
+    var al = document.getElementById("admin-progress-label"); if(al) al.textContent = Math.round(maxP)+"%";
     var am = document.getElementById("admin-max-progress"); if(am) am.textContent = Math.round(maxP)+"%";
     statusOk(st);
   }).catch(function(){ statusErr(st,"Error al actualizar"); });

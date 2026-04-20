@@ -1166,16 +1166,38 @@ function openLetter(){
   // Network value is authoritative, but localStorage is a reliable backup for
   // cases where the last scroll save didn't complete before the tab closed
   // (fetches fired in beforeunload are often cancelled by the browser).
-  var p = (data.progress && data.progress.lastPercent) || 0;
+  var serverLast = (data.progress && data.progress.lastPercent) || 0;
+  var serverMax = (data.progress && data.progress.maxPercent) || 0;
+  var p = serverLast;
   try {
     var lsP = parseFloat(localStorage.getItem(LAST_PERCENT_KEY));
     if(!isNaN(lsP) && lsP > p) p = lsP;
   } catch(e){}
-  var maxP = (data.progress && data.progress.maxPercent) || 0;
+  var maxP = serverMax;
   if(p > maxP) maxP = p;
   pendingResumePercent = p;
   maxPercentSession = maxP;
   lastSavedPercent = maxP;
+  // Reconcile: if localStorage had a higher percent than what the server knows
+  // (previous session's close-time save got cancelled by the browser), push
+  // the merged value back so admin dashboards / logs reflect reality. If the
+  // gap crosses a 10% milestone we also write a progress log so the admin
+  // doesn't lose track of large jumps that happened between persisted saves.
+  if(!isAdmin && maxP > serverMax + 1){
+    if(!data.progress) data.progress = {maxPercent:0,lastPercent:0,lastUpdated:"",finishedLogged:false};
+    data.progress.maxPercent = maxP;
+    data.progress.lastPercent = p;
+    data.progress.lastUpdated = new Date().toISOString();
+    var crossedMilestone = (maxP - serverMax) >= 10;
+    var reachedEnd = maxP >= 98 && !data.progress.finishedLogged;
+    if(reachedEnd) data.progress.finishedLogged = true;
+    saveData(data).catch(function(){});
+    if(reachedEnd){
+      appendLog("finished","Carta terminada");
+    } else if(crossedMilestone){
+      appendLog("progress", Math.round(maxP)+"% leído");
+    }
+  }
   // Start the bar at 0 — it will fill live as the user scrolls. The stored
   // maxP is still used for persistence / logging, it just isn't reflected
   // in the visible bar.
@@ -1302,10 +1324,17 @@ function throttle(fn, wait){
 
 // ── Admin rendering ─────────────────────────────────────────────────
 function renderAdmin(){
-  document.getElementById("letter-editor").innerHTML = data.letter || "";
-  document.getElementById("disc-editor").innerHTML = data.disclaimer || "";
-  document.getElementById("farewell-editor").innerHTML = data.farewell || "<p>Respeto tu decisión. Puedes volver cuando quieras leerla, estará aquí esperando.</p>";
   var align = data.textAlign || "justify";
+  // Editors also go through renderRichContent so they're normalized too:
+  // bogus Google-Docs <h2><p>...</p></h2> wrapping gets unwrapped (otherwise
+  // A+/A- exposes h2's default bold), inline text-align is stripped from
+  // every descendant, and the container's alignment is set to the current
+  // setting (so paragraphs without their own alignment inherit justify
+  // instead of falling back to left). When the admin saves, innerHTML
+  // contains the normalized version, so data.json self-cleans over time.
+  renderRichContent(document.getElementById("letter-editor"), data.letter || "", align);
+  renderRichContent(document.getElementById("disc-editor"), data.disclaimer || "", align);
+  renderRichContent(document.getElementById("farewell-editor"), data.farewell || "<p>Respeto tu decisión. Puedes volver cuando quieras leerla, estará aquí esperando.</p>", align);
   renderRichContent(document.getElementById("admin-letter-content"), data.letter || "", align);
   renderRichContent(document.getElementById("admin-disclaimer-content"), data.disclaimer || "", align);
   var maxP = (data.progress && data.progress.maxPercent) || 0;
@@ -1439,6 +1468,49 @@ function bumpFontSize(editorId, delta){
     idx = Math.max(0, Math.min(FONT_SIZES.length-1, current + delta));
   }
   var target = FONT_SIZES[idx] + "rem";
+
+  // Multi-block branch — triggered by Ctrl+A or any selection that spans more
+  // than one top-level block. Wrapping the whole thing in a single <span> is
+  // invalid HTML (span can't contain block elements) and browsers silently
+  // drop the wrapper on execCommand("insertHTML"), so the font size never
+  // changes. Instead we set style.fontSize directly on each block that
+  // intersects the selection. Ctrl+Z won't undo this one (no execCommand)
+  // but that's a reasonable tradeoff: the buttons now actually do something.
+  var blockTags = {P:1,DIV:1,H1:1,H2:1,H3:1,H4:1,H5:1,H6:1,LI:1,BLOCKQUOTE:1,PRE:1};
+  var topBlocks = [];
+  for(var i=0;i<editor.children.length;i++){
+    var child = editor.children[i];
+    if(range.intersectsNode(child)) topBlocks.push(child);
+  }
+  if(topBlocks.length > 1 || (range.commonAncestorContainer === editor && topBlocks.length >= 1)){
+    topBlocks.forEach(function(b){
+      if(blockTags[b.tagName]){
+        b.style.fontSize = target;
+        // Also clear font-size on any inner spans so the block's size wins,
+        // otherwise old inline sizes on descendants override the new value.
+        var inner = b.querySelectorAll("[style*='font-size']");
+        for(var j=0;j<inner.length;j++) inner[j].style.fontSize = "";
+      } else {
+        // Non-block top-level child (e.g. a stray text run) — wrap it.
+        var span = document.createElement("span");
+        span.style.fontSize = target;
+        b.parentNode.insertBefore(span, b);
+        span.appendChild(b);
+      }
+    });
+    var r2 = document.createRange();
+    r2.setStartBefore(topBlocks[0]);
+    r2.setEndAfter(topBlocks[topBlocks.length-1]);
+    var sel2 = window.getSelection();
+    sel2.removeAllRanges();
+    sel2.addRange(r2);
+    savedRange = r2.cloneRange();
+    savedEditorId = editorId;
+    return;
+  }
+
+  // Single-block branch — wrap the selection in a span via execCommand so
+  // Ctrl+Z works on the standard undo stack.
   // Tag the inserted wrapper so we can find it afterwards and re-select its
   // contents. Without this, execCommand('insertHTML') collapses the caret at
   // the end of the inserted text, so a second click on A-/A+ would see an
@@ -1451,13 +1523,13 @@ function bumpFontSize(editorId, delta){
   document.execCommand("insertHTML", false, html);
   var marker = document.getElementById(markerId);
   if(marker){
-    var r2 = document.createRange();
-    r2.selectNodeContents(marker);
-    var sel2 = window.getSelection();
-    sel2.removeAllRanges();
-    sel2.addRange(r2);
+    var r3 = document.createRange();
+    r3.selectNodeContents(marker);
+    var sel3 = window.getSelection();
+    sel3.removeAllRanges();
+    sel3.addRange(r3);
     marker.removeAttribute("id");
-    savedRange = r2.cloneRange();
+    savedRange = r3.cloneRange();
     savedEditorId = editorId;
   }
 }
@@ -1590,11 +1662,18 @@ function saveSettings(){
   data.textAlign = getSegmentedValue("text-align-seg") || "justify";
   // Re-render every admin preview (and user view if it's live) with the new
   // alignment, stripping any inline text-align from pasted content so the
-  // container's chosen alignment actually wins.
+  // container's chosen alignment actually wins. Editors are included so
+  // paragraphs without explicit alignment reflect the setting immediately.
   var adminLetter = document.getElementById("admin-letter-content");
   if(adminLetter) renderRichContent(adminLetter, data.letter || "", data.textAlign);
   var adminDisc = document.getElementById("admin-disclaimer-content");
   if(adminDisc) renderRichContent(adminDisc, data.disclaimer || "", data.textAlign);
+  var letterEd = document.getElementById("letter-editor");
+  if(letterEd) letterEd.style.textAlign = data.textAlign;
+  var discEd = document.getElementById("disc-editor");
+  if(discEd) discEd.style.textAlign = data.textAlign;
+  var farewellEd = document.getElementById("farewell-editor");
+  if(farewellEd) farewellEd.style.textAlign = data.textAlign;
   var userLetter = document.getElementById("letter-content");
   if(userLetter && userLetter.innerHTML) renderRichContent(userLetter, data.letter || "", data.textAlign);
   var userDisc = document.getElementById("disclaimer-content");
@@ -1755,6 +1834,14 @@ document.addEventListener("click", function(e){
     if(al) renderRichContent(al, data.letter || "", newAlign);
     var ad = document.getElementById("admin-disclaimer-content");
     if(ad) renderRichContent(ad, data.disclaimer || "", newAlign);
+    // Editors: only nudge the container's text-align (editing in progress —
+    // don't reset innerHTML mid-edit and throw away the user's work).
+    var le = document.getElementById("letter-editor");
+    if(le) le.style.textAlign = newAlign;
+    var de = document.getElementById("disc-editor");
+    if(de) de.style.textAlign = newAlign;
+    var fe = document.getElementById("farewell-editor");
+    if(fe) fe.style.textAlign = newAlign;
     var lc = document.getElementById("letter-content");
     if(lc && lc.innerHTML) renderRichContent(lc, data.letter || "", newAlign);
     var dc = document.getElementById("disclaimer-content");

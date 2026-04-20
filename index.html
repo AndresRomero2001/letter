@@ -18,14 +18,15 @@
   --accent: #8b5cf6; --accent-d: #6d28d9;
   --text: #fff; --muted: rgba(255,255,255,0.55);
   --err: #f87171; --ok: #34d399;
-  --papyrus-ink: #0d2038;
-  --papyrus-ink-soft: rgba(13,32,56,0.72);
-  --crystal-core: #0a1828;
-  --crystal-dark: #1e3a5a;
-  --crystal-mid: #587da5;
-  --crystal-mid-light: #87adcb;
-  --crystal-light: #b4d2e8;
-  --crystal-highlight: #dae9f3;
+  --papyrus-ink: #112a45;
+  --papyrus-ink-soft: rgba(17,42,69,0.72);
+  --sky-shadow: #153a5c;
+  --sky-dark: #2c5b80;
+  --sky-deep: #4b8dba;
+  --sky-mid: #7ab8dc;
+  --sky-base: #a8d5ed;
+  --sky-light: #cfe6f4;
+  --sky-highlight: #eaf4fb;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{
@@ -228,100 +229,89 @@ input[type=file]{display:none}
 }
 
 .papyrus{
-  position:relative;width:100%;padding:46px 0;
-  filter:drop-shadow(0 22px 50px rgba(5,15,40,.55));
+  position:relative;width:100%;padding:32px 0;
+  filter:drop-shadow(0 22px 50px rgba(10,30,70,.45));
 }
-/* Rolled-scroll cylinder with concentric rings at each end */
+/* Horizontal cylinder viewed from the side — paper rolled around a rod */
 .papyrus-roll{
-  position:absolute;left:-6px;right:-6px;height:46px;z-index:3;
+  position:absolute;left:-14px;right:-14px;height:34px;z-index:3;
   pointer-events:none;
+  /* Stepped bands simulate pixelated side-profile curvature of rolled paper */
   background:
     linear-gradient(180deg,
-      #0a1828 0%,
-      #1e3a5a 7%,
-      #4a7198 18%,
-      #87adcb 32%,
-      #c2dbef 48%,
-      #a2c4dd 58%,
-      #6d94bb 72%,
-      #2e4d70 86%,
-      #0a1828 100%);
-  border-radius:4px;
+      #153a5c 0%,   #153a5c 8%,
+      #2c5b80 8%,   #2c5b80 18%,
+      #4b8dba 18%,  #4b8dba 30%,
+      #7ab8dc 30%,  #7ab8dc 42%,
+      #cfe6f4 42%,  #cfe6f4 54%,
+      #a8d5ed 54%,  #a8d5ed 66%,
+      #7ab8dc 66%,  #7ab8dc 76%,
+      #4b8dba 76%,  #4b8dba 86%,
+      #2c5b80 86%,  #2c5b80 94%,
+      #153a5c 94%,  #153a5c 100%);
+  border-radius:3px;
   box-shadow:
-    0 8px 22px rgba(5,15,40,.55),
-    inset 0 2px 3px rgba(255,255,255,.4),
-    inset 0 -2px 3px rgba(0,8,22,.55);
+    0 6px 14px rgba(10,30,70,.45),
+    inset 0 1px 0 rgba(255,255,255,.45),
+    inset 0 -1px 0 rgba(8,22,45,.6);
+  image-rendering:pixelated;
 }
-/* Subtle inner lines on the rod to suggest depth */
+/* Thin horizontal lines = edges where paper wraps the cylinder */
 .papyrus-roll::after{
-  content:"";position:absolute;top:0;bottom:0;left:42px;right:42px;pointer-events:none;
+  content:"";position:absolute;top:0;bottom:0;left:18px;right:18px;pointer-events:none;
   background:
     linear-gradient(180deg,
-      transparent 30%,
-      rgba(255,255,255,.18) 38%,
-      transparent 44%,
-      rgba(0,10,25,.35) 58%,
-      transparent 64%);
+      transparent 24%,
+      rgba(255,255,255,.22) 25%, rgba(255,255,255,.22) 27%,
+      transparent 28%,
+      transparent 62%,
+      rgba(10,25,50,.4) 63%, rgba(10,25,50,.4) 65%,
+      transparent 66%);
 }
-/* LEFT spiral end-cap (rolled paper cross-section) */
+/* LEFT end-cap: small vertical ellipse showing the spiral of rolled paper from the side */
 .papyrus-roll::before{
-  content:"";position:absolute;top:-9px;bottom:-9px;left:-22px;width:64px;
+  content:"";position:absolute;top:-5px;bottom:-5px;left:-13px;width:24px;
   pointer-events:none;border-radius:50%;
   background:
-    radial-gradient(circle at 50% 50%,
-      #0a1828 0 6%,
-      #1e3a5a 6% 8%,
-      #587da5 8% 14%,
-      #1e3a5a 14% 16%,
-      #87adcb 16% 24%,
-      #1e3a5a 24% 26%,
-      #587da5 26% 34%,
-      #1e3a5a 34% 36%,
-      #b4d2e8 36% 46%,
-      #1e3a5a 46% 48%,
-      #87adcb 48% 60%,
-      #1e3a5a 60% 62%,
-      #dae9f3 62% 74%,
-      #6d94bb 74% 86%,
-      #1e3a5a 86% 94%,
-      #0a1828 94% 100%);
+    radial-gradient(ellipse 60% 55% at 60% 50%,
+      #0e2642 0 10%,
+      #1c4165 10% 20%,
+      #3b6d96 20% 30%,
+      #1c4165 30% 36%,
+      #6ea6cc 36% 48%,
+      #1c4165 48% 54%,
+      #a8d5ed 54% 66%,
+      #3b6d96 66% 72%,
+      #7ab8dc 72% 82%,
+      #1c4165 82% 92%,
+      #0e2642 92% 100%);
   box-shadow:
-    0 6px 16px rgba(5,15,40,.65),
-    inset 0 2px 4px rgba(255,255,255,.4),
-    inset 0 -2px 4px rgba(0,8,22,.55),
-    inset 2px 0 3px rgba(255,255,255,.25),
-    inset -2px 0 3px rgba(0,8,22,.4);
+    0 4px 10px rgba(10,30,70,.55),
+    inset 1px 0 2px rgba(255,255,255,.35),
+    inset -1px 0 2px rgba(8,22,45,.5);
 }
-/* RIGHT spiral end-cap (an inner element since ::before/::after already used) */
+/* RIGHT end-cap (mirror of left — uses element because ::before/::after taken) */
 .papyrus-roll-right{
-  position:absolute;top:-9px;bottom:-9px;right:-22px;width:64px;
+  position:absolute;top:-5px;bottom:-5px;right:-13px;width:24px;
   pointer-events:none;border-radius:50%;z-index:4;
   background:
-    radial-gradient(circle at 50% 50%,
-      #0a1828 0 6%,
-      #1e3a5a 6% 8%,
-      #587da5 8% 14%,
-      #1e3a5a 14% 16%,
-      #87adcb 16% 24%,
-      #1e3a5a 24% 26%,
-      #587da5 26% 34%,
-      #1e3a5a 34% 36%,
-      #b4d2e8 36% 46%,
-      #1e3a5a 46% 48%,
-      #87adcb 48% 60%,
-      #1e3a5a 60% 62%,
-      #dae9f3 62% 74%,
-      #6d94bb 74% 86%,
-      #1e3a5a 86% 94%,
-      #0a1828 94% 100%);
+    radial-gradient(ellipse 60% 55% at 40% 50%,
+      #0e2642 0 10%,
+      #1c4165 10% 20%,
+      #3b6d96 20% 30%,
+      #1c4165 30% 36%,
+      #6ea6cc 36% 48%,
+      #1c4165 48% 54%,
+      #a8d5ed 54% 66%,
+      #3b6d96 66% 72%,
+      #7ab8dc 72% 82%,
+      #1c4165 82% 92%,
+      #0e2642 92% 100%);
   box-shadow:
-    0 6px 16px rgba(5,15,40,.65),
-    inset 0 2px 4px rgba(255,255,255,.4),
-    inset 0 -2px 4px rgba(0,8,22,.55),
-    inset 2px 0 3px rgba(255,255,255,.25),
-    inset -2px 0 3px rgba(0,8,22,.4);
+    0 4px 10px rgba(10,30,70,.55),
+    inset 1px 0 2px rgba(255,255,255,.35),
+    inset -1px 0 2px rgba(8,22,45,.5);
 }
-/* Small bright highlight on each end-cap to suggest glossy glass */
 .papyrus-roll::before,.papyrus-roll-right{
   background-blend-mode:normal;
 }
@@ -331,34 +321,40 @@ input[type=file]{display:none}
   position:relative;
   background:
     linear-gradient(180deg,
-      rgba(195,228,255,0.16) 0%,
-      rgba(150,200,245,0.24) 30%,
-      rgba(170,215,250,0.22) 65%,
-      rgba(195,228,255,0.16) 100%);
-  backdrop-filter:blur(30px) saturate(180%);
-  -webkit-backdrop-filter:blur(30px) saturate(180%);
-  border-left:1px solid rgba(180,220,255,.3);
-  border-right:1px solid rgba(180,220,255,.3);
+      rgba(200,230,248,0.14) 0%,
+      rgba(168,213,237,0.20) 40%,
+      rgba(200,230,248,0.14) 100%);
+  backdrop-filter:blur(14px) saturate(150%);
+  -webkit-backdrop-filter:blur(14px) saturate(150%);
+  border-left:1px solid rgba(200,230,248,.35);
+  border-right:1px solid rgba(200,230,248,.35);
   box-shadow:
-    inset 0 0 120px rgba(80,140,210,.2),
-    inset 60px 0 90px -55px rgba(170,215,250,.18),
-    inset -60px 0 90px -55px rgba(170,215,250,.18),
-    inset 0 30px 50px -25px rgba(220,235,250,.15),
-    0 2px 0 0 rgba(30,60,100,.3);
-  padding:78px 56px 88px;
+    inset 0 0 100px rgba(120,180,230,.14),
+    inset 50px 0 80px -55px rgba(200,230,248,.18),
+    inset -50px 0 80px -55px rgba(200,230,248,.18),
+    inset 0 24px 40px -25px rgba(230,245,255,.18),
+    0 2px 0 0 rgba(40,80,130,.3);
+  padding:68px 56px 78px;
   min-height:62vh;
   overflow:hidden;
 }
+/* Minecraft stained-glass: scattered pixel squares on a 16x16 grid */
 .papyrus-body::before{
-  content:"";position:absolute;inset:0;pointer-events:none;opacity:.22;
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.18  0 0 0 0 0.34  0 0 0 0 0.54  0 0 0 0.22 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-  mix-blend-mode:overlay;
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.85;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'><rect width='16' height='16' fill='rgba(255,255,255,0)'/><rect x='0' y='0' width='1' height='1' fill='rgba(255,255,255,0.32)'/><rect x='5' y='1' width='1' height='1' fill='rgba(168,213,237,0.45)'/><rect x='11' y='0' width='1' height='1' fill='rgba(255,255,255,0.22)'/><rect x='3' y='3' width='1' height='1' fill='rgba(122,184,220,0.4)'/><rect x='8' y='4' width='1' height='1' fill='rgba(255,255,255,0.38)'/><rect x='14' y='3' width='1' height='1' fill='rgba(200,230,248,0.36)'/><rect x='1' y='6' width='1' height='1' fill='rgba(168,213,237,0.3)'/><rect x='6' y='7' width='1' height='1' fill='rgba(255,255,255,0.3)'/><rect x='12' y='6' width='1' height='1' fill='rgba(122,184,220,0.42)'/><rect x='4' y='9' width='1' height='1' fill='rgba(255,255,255,0.28)'/><rect x='9' y='10' width='1' height='1' fill='rgba(168,213,237,0.4)'/><rect x='15' y='9' width='1' height='1' fill='rgba(255,255,255,0.35)'/><rect x='2' y='12' width='1' height='1' fill='rgba(200,230,248,0.4)'/><rect x='7' y='13' width='1' height='1' fill='rgba(122,184,220,0.34)'/><rect x='13' y='12' width='1' height='1' fill='rgba(255,255,255,0.3)'/><rect x='5' y='15' width='1' height='1' fill='rgba(168,213,237,0.3)'/><rect x='10' y='14' width='1' height='1' fill='rgba(255,255,255,0.26)'/></svg>");
+  background-size:48px 48px;
+  image-rendering:pixelated;
+  image-rendering:crisp-edges;
+  mix-blend-mode:screen;
 }
+/* Pixelated grid overlay = faint minecraft block outlines */
 .papyrus-body::after{
   content:"";position:absolute;inset:0;pointer-events:none;
   background:
-    radial-gradient(ellipse at 28% 18%, rgba(225,240,255,.22), transparent 45%),
-    radial-gradient(ellipse at 75% 85%, rgba(170,210,245,.14), transparent 50%);
+    linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px) 0 0/48px 48px,
+    linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px) 0 0/48px 48px,
+    radial-gradient(ellipse at 28% 18%, rgba(235,246,253,.18), transparent 45%),
+    radial-gradient(ellipse at 75% 85%, rgba(180,220,245,.12), transparent 50%);
 }
 .letter-content{
   position:relative;z-index:1;
@@ -368,7 +364,7 @@ input[type=file]{display:none}
   letter-spacing:.2px;
 }
 .letter-content h1,.letter-content h2,.letter-content h3{
-  font-family:'Cinzel',serif;color:#08172b;text-align:center;
+  font-family:'Cinzel',serif;color:#0e2544;text-align:center;
   margin:.5em 0 .8em;letter-spacing:2px;
   text-shadow:0 1px 1px rgba(220,238,255,.35);
 }
@@ -383,7 +379,7 @@ input[type=file]{display:none}
 }
 .letter-content a{color:#1d4a7b;text-decoration:underline}
 .letter-content em,.letter-content i{color:#153660}
-.letter-content strong,.letter-content b{color:#08172b}
+.letter-content strong,.letter-content b{color:#0e2544}
 .letter-content hr{
   border:none;height:1px;margin:24px auto;width:60%;
   background:linear-gradient(90deg,transparent,rgba(30,60,100,.5),transparent);
@@ -464,14 +460,14 @@ input[type=file]{display:none}
   .card{padding:28px 20px}
   .card.wide{padding:20px 16px}
   h1{font-size:1.2rem}
-  .papyrus-body{padding:58px 24px 66px}
+  .papyrus-body{padding:54px 24px 62px}
   .letter-content{font-size:1.05rem;line-height:1.85;text-align:left}
   .letter-content p{text-indent:1.2em}
-  .papyrus-roll{height:36px;left:-4px;right:-4px}
-  .papyrus-roll::before,.papyrus-roll-right{width:50px;top:-7px;bottom:-7px}
-  .papyrus-roll::before{left:-17px}
-  .papyrus-roll-right{right:-17px}
-  .papyrus{padding:36px 0}
+  .papyrus-roll{height:28px;left:-10px;right:-10px}
+  .papyrus-roll::before,.papyrus-roll-right{width:20px;top:-4px;bottom:-4px}
+  .papyrus-roll::before{left:-11px}
+  .papyrus-roll-right{right:-11px}
+  .papyrus{padding:26px 0}
 }
 </style>
 </head>
@@ -682,7 +678,7 @@ input[type=file]{display:none}
 <script>
 var GITHUB_API = "https://api.github.com/repos/AndresRomero2001/letter/contents/data.json";
 var ADMIN_HASH = "d8e02dc389f474320bf6ca93f9ae00fce62e319a52b29e7de04cb0658dda168d";
-var ENC_ADMIN_TOKEN = "e991f202db840625466dff4bef7c0d3b:52ced37a7c3210b8abe2a6a2:b0d2037ec5260a51bcfaf93407a50dcd:d342165144cdf90f84314e463809e749b9a2aa3c44cef08e03d7727436c2f9ba3a8f675809d1481c";
+var ENC_ADMIN_TOKEN = "b31e88babe8e0c9ac096e94c65deece3:1927633985012c42c5265250:192ecef71b57d868a55ee3834ede823d:34285fab07b550c4a806bcd1659daae842545d57753bd17830637bbcf408f6e468cb4d0abdc9d41c";
 var ACCEPT_KEY = "letter_accepted_v1";
 
 var data = null;

@@ -762,7 +762,7 @@ input[type=file]{display:none}
 <script>
 var GITHUB_API = "https://api.github.com/repos/AndresRomero2001/letter/contents/data.json";
 var ADMIN_HASH = "d8e02dc389f474320bf6ca93f9ae00fce62e319a52b29e7de04cb0658dda168d";
-var ENC_ADMIN_TOKEN = "08298e1546353bb7cdc89b6f317064d8:ecdff3d9c19f520377c2bc65:53321f32cfd2e279281fd3be5aeb9e15:2ce0827167f167e5cc7dd2d88dc90d0d6cb6a76408553a031834a8a422235972b8227bca4a5f72ee";
+var ENC_ADMIN_TOKEN = "4a29f052e42e8ce432248a7b2323ead5:adc28baf18e1241149b8b6d1:14a354bffe217d208df32928a17f29c4:47f8671d660f0557587a456f770af7d80af0dbb013e41b249b89afd5edb745bcbede538a6776e697";
 var ACCEPT_KEY = "letter_accepted_v1";
 var LAST_PERCENT_KEY = "letter_last_percent_v1";
 
@@ -1070,22 +1070,24 @@ var lastSavedPercent = 0;
 // data.progress.lastPercent (from GitHub) is stale and the real value came
 // from the localStorage backup.
 var pendingResumePercent = 0;
-// Session-scoped milestone tracker — fires a "progress" log the first time
-// the user's CURRENT scroll position crosses each 10% boundary in THIS
-// session. Independent from maxPercent/lastSavedPercent, so the admin sees
-// live reading activity even when the user is re-reading territory they've
-// already covered (where newMax wouldn't advance and persistProgress would
-// otherwise stay silent).
-var sessionNextMilestone = 10;
-// Dwell-time gate on milestone logs: the user has to stay at or above the
-// pending milestone for MILESTONE_DWELL_MS before it counts as "reached".
-// This filters out the very common "scroll to the bottom to see how long the
-// letter is, then scroll back up to actually read it" pattern — a scan takes
-// 2-5 seconds, so none of the decile thresholds get credited, and the
-// "Carta terminada" log doesn't fire at the end of a scan either. Reading
-// the same decile takes much longer than the dwell, so it logs normally.
+// Bidirectional decile tracking: every time the user enters a new 10%
+// bucket (going UP or DOWN) we arm a dwell timer. If they stay in that
+// bucket for MILESTONE_DWELL_MS, we log it. This means re-reading a lower
+// section — e.g. user reached 100%, came back and dwelt around 30% — also
+// generates activity, which is exactly the signal we want (an admin can
+// see whether someone actually re-read or just closed the tab).
+//
+// Two properties fall out of "bucket change = re-arm":
+//  • Scanning (0→100 in ~3s) cancels timers at every decile, so none fire
+//    except the destination if the user stops there.
+//  • Fidgeting within a bucket (49% ↔ 51%) doesn't retrigger, because the
+//    bucket value hasn't changed.
+//
+// After a successful log, dwellPendingMilestone stays pointed at the just-
+// logged decile so the same decile doesn't re-log while the user is still
+// in it. Only when they drift into a DIFFERENT decile do we rearm.
 var MILESTONE_DWELL_MS = 20000; // 20 s
-var dwellPendingMilestone = 0;  // 0 means nothing pending
+var dwellPendingMilestone = 0;  // 0 means "at the top / nothing pending"
 var dwellPendingTimer = null;
 var dwellPendingStartTime = 0;
 
@@ -1107,10 +1109,10 @@ function openLetter(){
   pendingResumePercent = p;
   maxPercentSession = maxP;
   lastSavedPercent = maxP;
-  // Seed the session milestone just past the user's resume point so the
-  // smooth-scroll into position doesn't spam logs for every decile it crosses
-  // en route. If there's no resume (fresh open / no modal), start at 10.
-  sessionNextMilestone = (p > 3 && p < 97) ? (Math.floor(p/10)*10 + 10) : 10;
+  // Bidirectional tracking means the resume smooth-scroll naturally collapses
+  // to a single log at the destination: each decile the scroll crosses en
+  // route re-arms the timer, so only the final resting decile survives long
+  // enough to fire.
   resetDwell();
   // Reconcile: if localStorage had a higher percent than what the server
   // knows (previous session's close-time save got cancelled by the browser),
@@ -1161,8 +1163,9 @@ function restartReading(){
   var fromPercent = Math.round(pendingResumePercent || 0);
   try { localStorage.removeItem(LAST_PERCENT_KEY); } catch(e){}
   pendingResumePercent = 0;
-  // User is going back to 0, so the next session milestone is 10% again.
-  sessionNextMilestone = 10;
+  // Scrolling back to 0 will traverse every decile; resetDwell ensures the
+  // very first tick after the smooth-scroll kicks in starts from a clean
+  // slate rather than inheriting whatever was pending from the old position.
   resetDwell();
   if(data){
     if(!data.progress) data.progress = {maxPercent:0,lastPercent:0,lastUpdated:"",finishedLogged:false};
@@ -1201,24 +1204,34 @@ function resetDwell(){
 }
 function fireDwellLog(){
   // Called when the dwell timer expires (or on tab-hide if enough time
-  // elapsed). Logs the highest decile the user is currently at/above — so a
-  // user who scrolled quickly from 0 to 50 and then parked there for the
-  // dwell window gets "50% leído", not "10% leído".
+  // elapsed). Logs the decile the user has been camping in — works for both
+  // forward progress AND re-reading: if they reached 100%, closed the tab,
+  // came back, scrolled to 30% and dwelt there, this fires "30% leído" so
+  // the admin can tell apart "left at 100%" from "actually re-reading".
   var letterScreen = document.getElementById("letter-screen");
   if(!letterScreen || letterScreen.classList.contains("hidden")){ resetDwell(); return; }
   var curP = currentScrollPercent();
-  if(curP < dwellPendingMilestone){ resetDwell(); return; }
-  var highestDecile = Math.min(100, Math.floor(curP/10)*10);
-  while(sessionNextMilestone <= highestDecile) sessionNextMilestone += 10;
-  if(highestDecile >= 100 && data && data.progress && !data.progress.finishedLogged){
+  var curDecile = Math.min(100, Math.floor(curP/10)*10);
+  // If the user drifted out of the pending decile in the final moments
+  // before the timer fired, don't credit it — the next onScrollTick will
+  // rearm for wherever they actually are now.
+  if(curDecile !== dwellPendingMilestone){ resetDwell(); return; }
+  // Decile 0 (the top of the letter) isn't a milestone worth logging — it's
+  // where every session starts.
+  if(curDecile <= 0){ resetDwell(); return; }
+  if(curDecile >= 100 && data && data.progress && !data.progress.finishedLogged){
     data.progress.finishedLogged = true;
     // Persist the finishedLogged flag so it doesn't re-fire on the next visit.
     saveData(data).catch(function(){});
     appendLog("finished","Carta terminada");
   } else {
-    appendLog("progress", highestDecile + "% leído");
+    appendLog("progress", curDecile + "% leído");
   }
-  resetDwell();
+  // Keep dwellPendingMilestone pinned to the just-logged decile so fidgeting
+  // within the same bucket (49% ↔ 51% is still decile 50) doesn't retrigger.
+  // Only a genuine decile CHANGE in onScrollTick will rearm the timer.
+  dwellPendingTimer = null;
+  dwellPendingStartTime = 0;
 }
 
 function onScrollTick(){
@@ -1231,26 +1244,29 @@ function onScrollTick(){
   // Synchronous local backup — guarantees the continue-modal has a value to
   // read on the next visit even if the network save never completes.
   try { localStorage.setItem(LAST_PERCENT_KEY, String(p)); } catch(e){}
-  // Dwell-gated milestone logging: enter the pending milestone and arm a
-  // timer; if the user stays at or above that threshold for the dwell window
-  // we log the highest decile reached. If they drop below it first (e.g.
-  // scanned to bottom then scrolled back to start), the timer is cancelled
-  // and nothing is logged.
+  // Bidirectional dwell-gated logging: detect a decile CHANGE (up or down)
+  // and restart the dwell timer. Scanning blows through deciles too fast for
+  // any to survive; reading or re-reading sits in one decile long enough to
+  // fire. The "fired" state is represented by dwellPendingTimer === null
+  // while dwellPendingMilestone is still set — that keeps the same decile
+  // from re-logging on tiny jitter after the log already went out.
   if(!isAdmin){
-    if(p >= sessionNextMilestone){
-      if(dwellPendingMilestone !== sessionNextMilestone){
-        // Starting to count dwell for this milestone (or re-arming after a
-        // previous cancel). Any prior pending timer is for a different
-        // milestone and should be replaced.
-        if(dwellPendingTimer) clearTimeout(dwellPendingTimer);
-        dwellPendingMilestone = sessionNextMilestone;
-        dwellPendingStartTime = Date.now();
-        dwellPendingTimer = setTimeout(fireDwellLog, MILESTONE_DWELL_MS);
-      }
-    } else if(dwellPendingTimer){
-      // User scrolled back below the pending milestone — cancel.
-      resetDwell();
+    var curDecile = Math.min(100, Math.floor(p/10)*10);
+    if(curDecile <= 0){
+      // Back at the top — clear any pending state so the next downward move
+      // starts fresh.
+      if(dwellPendingMilestone !== 0 || dwellPendingTimer) resetDwell();
+    } else if(curDecile !== dwellPendingMilestone){
+      // Entered a different decile (going UP or DOWN). Kill any in-flight
+      // timer for the old decile and arm a new one for this one.
+      if(dwellPendingTimer) clearTimeout(dwellPendingTimer);
+      dwellPendingMilestone = curDecile;
+      dwellPendingStartTime = Date.now();
+      dwellPendingTimer = setTimeout(fireDwellLog, MILESTONE_DWELL_MS);
     }
+    // else: same decile as we've been tracking — either the timer is still
+    // counting down, or it already fired and we're waiting for the user to
+    // leave this decile before logging anything new.
   }
   scheduleProgressSave();
 }

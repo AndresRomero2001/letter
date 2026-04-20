@@ -466,23 +466,28 @@ input[type=file]{display:none}
   margin:14px 0;font-style:italic;color:rgba(242,232,204,.82);
 }
 
-.continue-banner{
-  position:relative;z-index:2;margin-bottom:24px;
-  background:rgba(40,30,10,.35);border:1px solid rgba(246,224,160,.28);
-  border-radius:12px;padding:14px 18px;
-  display:flex;align-items:center;justify-content:space-between;
-  gap:12px;flex-wrap:wrap;
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+/* Continue reading modal — centered overlay shown on openLetter when the
+   user had a partial read. Replaces the old inline banner that used to live
+   in the papyrus body. */
+.modal-overlay{
+  position:fixed;inset:0;z-index:200;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(5,3,15,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  padding:20px;animation:fadeIn .25s ease;
 }
-.continue-banner .text{font-family:'EB Garamond',serif;color:#f2e8cc;font-size:.95rem;text-shadow:0 1px 2px rgba(0,0,0,.7)}
-.continue-banner .text strong{color:#ffe7a8}
-.continue-banner button{
-  background:linear-gradient(135deg,#6a5a2e,#3a2e14);color:#f6e0a0;
-  border:1px solid rgba(246,224,160,.35);padding:8px 16px;border-radius:10px;cursor:pointer;
-  font-size:.85rem;font-weight:600;font-family:'EB Garamond',serif;letter-spacing:.5px;
-  box-shadow:0 2px 8px rgba(0,0,0,.45);
+.modal-card{
+  max-width:460px;width:100%;
+  background:linear-gradient(180deg,rgba(35,25,60,.97),rgba(20,14,40,.97));
+  border:1px solid rgba(139,92,246,.35);
+  border-radius:22px;padding:32px 28px 28px;text-align:center;
+  box-shadow:0 18px 60px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.04) inset;
 }
-.continue-banner button:hover{box-shadow:0 4px 14px rgba(246,224,160,.25)}
+.modal-card .icon{font-size:44px;margin-bottom:12px}
+.modal-card h2{font-size:1.3rem;margin-bottom:10px;color:#fff;font-weight:600}
+.modal-card p{color:rgba(255,255,255,.85);line-height:1.6;margin-bottom:22px;font-size:.95rem}
+.modal-card p strong{color:var(--accent)}
+.modal-actions{display:flex;gap:10px;flex-wrap:wrap}
+.modal-actions .btn{flex:1;min-width:140px}
 
 .letter-footer-row{
   width:100%;display:flex;justify-content:space-between;align-items:center;
@@ -627,10 +632,6 @@ input[type=file]{display:none}
         <img class="papyrus-header-img" src="papyrus_header.png" alt="">
         <div class="papyrus-body">
           <div class="letter-column">
-            <div id="continue-banner" class="continue-banner hidden">
-              <span class="text">La última vez llegaste al <strong id="continue-percent">0%</strong>. ¿Quieres seguir desde ahí?</span>
-              <button onclick="resumeReading()">Continuar</button>
-            </div>
             <div id="letter-content" class="letter-content"></div>
           </div>
         </div>
@@ -812,6 +813,19 @@ input[type=file]{display:none}
 
     <div class="footer">
       <button class="link-btn" onclick="logout()">Cerrar sesión</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONTINUE MODAL (shown on openLetter if user has a partial read) -->
+<div id="continue-modal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <div class="icon">&#128214;</div>
+    <h2>¿Continuar donde lo dejaste?</h2>
+    <p>La última vez llegaste al <strong id="continue-percent">0%</strong> de la carta.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="btn-continue-restart">Empezar de nuevo</button>
+      <button class="btn" id="btn-continue-resume">Continuar</button>
     </div>
   </div>
 </div>
@@ -1087,14 +1101,6 @@ function openLetter(){
   var maxP = (data.progress && data.progress.maxPercent) || 0;
   maxPercentSession = maxP;
   lastSavedPercent = maxP;
-  // Continue banner: show if previous session reached >3% and <97%
-  var banner = document.getElementById("continue-banner");
-  if(p > 3 && p < 97){
-    document.getElementById("continue-percent").textContent = Math.round(p)+"%";
-    banner.classList.remove("hidden");
-  } else {
-    banner.classList.add("hidden");
-  }
   // Start the bar at 0 — it will fill live as the user scrolls. The stored
   // maxP is still used for persistence / logging, it just isn't reflected
   // in the visible bar.
@@ -1102,6 +1108,17 @@ function openLetter(){
   show("letter-screen");
   window.scrollTo(0,0);
   attachScrollTracking();
+  // Continue modal: show if previous session reached >3% and <97%
+  var modal = document.getElementById("continue-modal");
+  if(p > 3 && p < 97){
+    document.getElementById("continue-percent").textContent = Math.round(p)+"%";
+    modal.classList.remove("hidden");
+  } else {
+    modal.classList.add("hidden");
+  }
+}
+function dismissContinue(){
+  document.getElementById("continue-modal").classList.add("hidden");
 }
 
 function currentScrollPercent(){
@@ -1164,7 +1181,7 @@ function resumeReading(){
   var doc = document.documentElement;
   var target = (doc.scrollHeight - doc.clientHeight) * (p/100);
   window.scrollTo({top:target, behavior:"smooth"});
-  document.getElementById("continue-banner").classList.add("hidden");
+  dismissContinue();
 }
 
 var scrollTracking = false;
@@ -1201,13 +1218,52 @@ function renderAdmin(){
   adminLetter.style.textAlign = data.textAlign || "justify";
   document.getElementById("admin-disclaimer-content").innerHTML = data.disclaimer || "";
   var maxP = (data.progress && data.progress.maxPercent) || 0;
-  document.getElementById("admin-progress-inner").style.width = maxP.toFixed(1)+"%";
-  document.getElementById("admin-progress-label").textContent = Math.round(maxP)+"%";
   document.getElementById("admin-max-progress").textContent = Math.round(maxP)+"%";
+  document.getElementById("admin-progress-inner").style.width = "0%";
+  document.getElementById("admin-progress-label").textContent = "0%";
   document.getElementById("user-code-input").value = data.userCode || "";
   setSegmentedValue("text-align-seg", data.textAlign || "justify");
   document.getElementById("page-disabled-toggle").checked = !!data.pageDisabled;
   renderLogs();
+  attachAdminScrollTracking();
+}
+
+/* Live-track the admin's scroll through the admin preview and update the
+   preview's progress bar. Gives the admin the same fill-as-you-scroll
+   experience the user will have, instead of a static "max %" fill. */
+var adminScrollAttached = false;
+function updateAdminProgress(){
+  var adminScreen = document.getElementById("admin-screen");
+  var panel = document.getElementById("panel-view-letter");
+  if(!adminScreen || adminScreen.classList.contains("hidden")) return;
+  if(!panel || panel.classList.contains("hidden")) return;
+  var el = document.getElementById("admin-letter-content");
+  if(!el) return;
+  var rect = el.getBoundingClientRect();
+  var vh = window.innerHeight || document.documentElement.clientHeight;
+  var elH = rect.height;
+  var elTop = rect.top;
+  // 0% when top of element is at viewport bottom (haven't started reading)
+  // 100% when bottom of element reaches viewport top (done)
+  var progress;
+  if(elH <= 0 || elH <= vh){
+    // Element shorter than viewport: fully visible once in view
+    progress = elTop <= 0 ? 100 : (elTop < vh ? ((vh - elTop) / vh) * 100 : 0);
+  } else {
+    var range = elH - vh;
+    progress = Math.max(0, Math.min(100, (-elTop) / range * 100));
+  }
+  var bar = document.getElementById("admin-progress-inner");
+  var lbl = document.getElementById("admin-progress-label");
+  if(bar) bar.style.width = progress.toFixed(1)+"%";
+  if(lbl) lbl.textContent = Math.round(progress)+"%";
+}
+function attachAdminScrollTracking(){
+  if(adminScrollAttached) return;
+  adminScrollAttached = true;
+  window.addEventListener("scroll", function(){ updateAdminProgress(); }, {passive:true});
+  window.addEventListener("resize", function(){ updateAdminProgress(); });
+  setTimeout(updateAdminProgress, 100);
 }
 
 // ── Editor helpers ──────────────────────────────────────────────────
@@ -1553,6 +1609,8 @@ document.getElementById("code").addEventListener("keydown", function(e){
 document.getElementById("unlock-btn").addEventListener("click", unlock);
 document.getElementById("btn-read").addEventListener("click", onDisclaimerRead);
 document.getElementById("btn-cancel").addEventListener("click", onDisclaimerCancel);
+document.getElementById("btn-continue-resume").addEventListener("click", resumeReading);
+document.getElementById("btn-continue-restart").addEventListener("click", dismissContinue);
 
 </script>
 </body>

@@ -121,10 +121,7 @@ body{
   color:var(--text);
 }
 body.letter-mode{
-  background:
-    radial-gradient(ellipse at 15% 10%, rgba(60,110,170,0.35), transparent 60%),
-    radial-gradient(ellipse at 85% 90%, rgba(90,70,180,0.28), transparent 60%),
-    linear-gradient(160deg, #040912 0%, #081628 40%, #0c2442 72%, #040b18 100%);
+  background:#0d0b1a;
   background-attachment: fixed;
 }
 .screen{
@@ -285,7 +282,7 @@ input[type=file]{display:none}
 
 /* ─────────── PAPYRUS ─────────── */
 .letter-wrap{
-  width:100%;max-width:720px;margin:0 auto;padding:30px 16px 60px;
+  width:100%;max-width:1200px;margin:0 auto;padding:30px 16px 60px;
   display:flex;flex-direction:column;align-items:center;
 }
 .letter-header{
@@ -315,8 +312,8 @@ input[type=file]{display:none}
 
 /* Image-based papyrus: header PNG + tiled body PNG + footer PNG */
 .papyrus{
-  position:relative;width:100%;max-width:1000px;margin:0 auto;padding:0;
-  filter:drop-shadow(0 22px 50px rgba(10,30,70,.45));
+  position:relative;width:100%;max-width:1200px;margin:0 auto;padding:0;
+  filter:drop-shadow(0 22px 50px rgba(0,0,0,.55));
 }
 .papyrus-header-img,.papyrus-footer-img{
   display:block;width:100%;height:auto;
@@ -336,21 +333,35 @@ input[type=file]{display:none}
   background-size:100% auto;
   background-position:top center;
   image-rendering:pixelated;
-  padding:24px 10% 32px;
+  padding:36px 12% 52px;
   min-height:40vh;
   overflow:hidden;
 }
-.letter-content{
+/* Narrow column centered over the actual "paper" area, with subtle translucent
+   backing so the cream text is readable on the pixelated dark papyrus */
+.letter-column{
   position:relative;z-index:1;
+  max-width:680px;margin:0 auto;padding:36px 40px;
+  background:rgba(14,10,28,0.45);
+  border:1px solid rgba(230,215,170,0.14);
+  border-radius:6px;
+  box-shadow:
+    0 6px 28px rgba(0,0,0,.45),
+    inset 0 0 40px rgba(230,215,170,.04);
+  backdrop-filter:blur(2px);
+  -webkit-backdrop-filter:blur(2px);
+}
+.letter-content{
   font-family:'EB Garamond','Cormorant Garamond',Georgia,serif;
-  font-size:1.18rem;line-height:1.95;color:var(--papyrus-ink);
+  font-size:1.2rem;line-height:1.95;color:#f2e8cc;
   text-align:justify;hyphens:auto;
   letter-spacing:.2px;
+  text-shadow:0 1px 2px rgba(0,0,0,.75);
 }
 .letter-content h1,.letter-content h2,.letter-content h3{
-  font-family:'Cinzel',serif;color:#0e2544;text-align:center;
+  font-family:'Cinzel',serif;color:#f6e0a0;text-align:center;
   margin:.5em 0 .8em;letter-spacing:2px;
-  text-shadow:0 1px 1px rgba(220,238,255,.35);
+  text-shadow:0 2px 6px rgba(0,0,0,.85);
 }
 .letter-content h2{font-size:1.5rem}
 .letter-content h3{font-size:1.15rem;letter-spacing:1px}
@@ -358,39 +369,40 @@ input[type=file]{display:none}
 .letter-content p:first-of-type{text-indent:0}
 .letter-content p:first-of-type::first-letter{
   font-family:'Cinzel',serif;font-size:3.2rem;float:left;line-height:.9;
-  padding:4px 10px 0 0;color:#1a3860;
-  text-shadow:0 1px 2px rgba(220,238,255,.4);
+  padding:4px 10px 0 0;color:#f6e0a0;
+  text-shadow:0 2px 6px rgba(0,0,0,.85);
 }
-.letter-content a{color:#1d4a7b;text-decoration:underline}
-.letter-content em,.letter-content i{color:#153660}
-.letter-content strong,.letter-content b{color:#0e2544}
+.letter-content a{color:#b9d5f0;text-decoration:underline}
+.letter-content em,.letter-content i{color:#f6e9bf}
+.letter-content strong,.letter-content b{color:#ffe7a8}
 .letter-content hr{
   border:none;height:1px;margin:24px auto;width:60%;
-  background:linear-gradient(90deg,transparent,rgba(30,60,100,.5),transparent);
+  background:linear-gradient(90deg,transparent,rgba(246,224,160,.5),transparent);
 }
 .letter-content img{max-width:100%;border-radius:6px;margin:12px 0;
-  box-shadow:0 4px 14px rgba(10,30,60,.3);}
+  box-shadow:0 4px 14px rgba(0,0,0,.55);}
 .letter-content blockquote{
-  border-left:3px solid rgba(30,60,100,.45);padding-left:14px;
-  margin:14px 0;font-style:italic;color:var(--papyrus-ink-soft);
+  border-left:3px solid rgba(246,224,160,.45);padding-left:14px;
+  margin:14px 0;font-style:italic;color:rgba(242,232,204,.82);
 }
 
 .continue-banner{
   position:relative;z-index:2;margin-bottom:24px;
-  background:rgba(40,90,150,.14);border:1px solid rgba(140,190,230,.35);
+  background:rgba(40,30,10,.35);border:1px solid rgba(246,224,160,.28);
   border-radius:12px;padding:14px 18px;
   display:flex;align-items:center;justify-content:space-between;
   gap:12px;flex-wrap:wrap;
   backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
 }
-.continue-banner .text{font-family:'EB Garamond',serif;color:#0f2c4a;font-size:.95rem}
+.continue-banner .text{font-family:'EB Garamond',serif;color:#f2e8cc;font-size:.95rem;text-shadow:0 1px 2px rgba(0,0,0,.7)}
+.continue-banner .text strong{color:#ffe7a8}
 .continue-banner button{
-  background:linear-gradient(135deg,#3a6b99,#1a3a62);color:#e6f1fa;
-  border:none;padding:8px 16px;border-radius:10px;cursor:pointer;
+  background:linear-gradient(135deg,#6a5a2e,#3a2e14);color:#f6e0a0;
+  border:1px solid rgba(246,224,160,.35);padding:8px 16px;border-radius:10px;cursor:pointer;
   font-size:.85rem;font-weight:600;font-family:'EB Garamond',serif;letter-spacing:.5px;
-  box-shadow:0 2px 8px rgba(15,40,80,.3);
+  box-shadow:0 2px 8px rgba(0,0,0,.45);
 }
-.continue-banner button:hover{box-shadow:0 4px 14px rgba(30,80,140,.5)}
+.continue-banner button:hover{box-shadow:0 4px 14px rgba(246,224,160,.25)}
 
 .letter-footer-row{
   width:100%;display:flex;justify-content:space-between;align-items:center;
@@ -444,7 +456,8 @@ input[type=file]{display:none}
   .card{padding:28px 20px}
   .card.wide{padding:20px 16px}
   h1{font-size:1.2rem}
-  .papyrus-body{padding:18px 7% 26px}
+  .papyrus-body{padding:20px 4% 28px}
+  .letter-column{padding:22px 18px;border-radius:4px}
   .letter-content{font-size:1.02rem;line-height:1.8;text-align:left}
   .letter-content p{text-indent:1.2em}
 }
@@ -514,11 +527,13 @@ input[type=file]{display:none}
     <div class="papyrus">
       <img class="papyrus-header-img" src="papyrus_header.png" alt="">
       <div class="papyrus-body">
-        <div id="continue-banner" class="continue-banner hidden">
-          <span class="text">La última vez llegaste al <strong id="continue-percent">0%</strong>. ¿Quieres seguir desde ahí?</span>
-          <button onclick="resumeReading()">Continuar</button>
+        <div class="letter-column">
+          <div id="continue-banner" class="continue-banner hidden">
+            <span class="text">La última vez llegaste al <strong id="continue-percent">0%</strong>. ¿Quieres seguir desde ahí?</span>
+            <button onclick="resumeReading()">Continuar</button>
+          </div>
+          <div id="letter-content" class="letter-content"></div>
         </div>
-        <div id="letter-content" class="letter-content"></div>
       </div>
       <img class="papyrus-footer-img" src="papyrus_footer.png" alt="">
     </div>
@@ -547,7 +562,9 @@ input[type=file]{display:none}
           <div class="papyrus" style="max-width:100%">
             <img class="papyrus-header-img" src="papyrus_header.png" alt="">
             <div class="papyrus-body">
-              <div id="admin-letter-content" class="letter-content"></div>
+              <div class="letter-column">
+                <div id="admin-letter-content" class="letter-content"></div>
+              </div>
             </div>
             <img class="papyrus-footer-img" src="papyrus_footer.png" alt="">
           </div>

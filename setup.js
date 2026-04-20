@@ -92,6 +92,7 @@ function buildHTML() {
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>${PAGE_TITLE}</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%9C%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
@@ -295,19 +296,28 @@ input[type=file]{display:none}
   text-shadow:0 0 20px rgba(120,180,230,.3);
 }
 .letter-header .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+/* Sticky progress bar — stays glued to the top while the user scrolls */
+.progress-sticky{
+  position:sticky;top:0;z-index:30;
+  background:rgba(14,10,28,0.88);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  margin:-22px -22px 14px;padding:12px 22px 10px;
+  border-radius:16px 16px 0 0;
+  border-bottom:1px solid rgba(139,92,246,.18);
+}
 .progress-outer{
-  width:100%;height:6px;background:rgba(180,218,245,.1);border-radius:3px;
-  overflow:hidden;margin-bottom:14px;position:relative;
-  border:1px solid rgba(180,218,245,.2);
+  width:100%;height:6px;background:rgba(139,92,246,.14);border-radius:3px;
+  overflow:hidden;position:relative;
+  border:1px solid rgba(139,92,246,.28);
 }
 .progress-inner{
   height:100%;width:0%;border-radius:3px;transition:width .3s ease;
-  background:linear-gradient(90deg,#5d91b8,#b3d5ec,#dae9f3,#b3d5ec,#5d91b8);
-  box-shadow:0 0 10px rgba(180,220,255,.55);
+  background:#8b5cf6;
+  box-shadow:0 0 10px rgba(139,92,246,.55);
 }
 .progress-label-row{
   display:flex;justify-content:space-between;font-size:.78rem;
-  color:rgba(180,218,245,.65);margin-bottom:10px;letter-spacing:1px;
+  color:rgba(210,196,255,.75);margin-bottom:8px;letter-spacing:1px;
 }
 
 /* Image-based papyrus: header PNG + tiled body PNG + footer PNG */
@@ -333,15 +343,17 @@ input[type=file]{display:none}
   background-size:100% auto;
   background-position:top center;
   image-rendering:pixelated;
-  padding:36px 12% 52px;
+  padding:12px 10% 20px;
   min-height:40vh;
   overflow:hidden;
 }
 /* Inner text column: narrower than the papyrus body so the text fits inside
-   the "paper" region (the body is narrower than the header/footer rolls). */
+   the "paper" region (the body is narrower than the header/footer rolls).
+   On desktop/laptop the column is wider so the letter uses more horizontal
+   space; the mobile media query overrides this to 100%. */
 .letter-column{
   position:relative;z-index:1;
-  max-width:560px;margin:0 auto;padding:0;
+  max-width:760px;margin:0 auto;padding:0;
 }
 .letter-content{
   font-family:'EB Garamond','Cormorant Garamond',Georgia,serif;
@@ -359,13 +371,16 @@ input[type=file]{display:none}
 .letter-content h1,.letter-content h2,.letter-content h3{
   font-family:'EB Garamond','Cormorant Garamond',Georgia,serif;
   font-weight:600;color:#f6e0a0;text-align:center;
-  margin:.5em 0 .8em;letter-spacing:.3px;line-height:1.25;
+  margin:.35em 0 .6em;letter-spacing:.3px;line-height:1.25;
   text-shadow:0 2px 6px rgba(0,0,0,.85);
 }
+/* First/last children: tighten the gap between the papyrus edge and the text */
+.letter-content>*:first-child{margin-top:0}
+.letter-content>*:last-child{margin-bottom:0}
 .letter-content h1{font-size:1.85rem}
 .letter-content h2{font-size:1.55rem}
 .letter-content h3{font-size:1.25rem}
-.letter-content p{margin-bottom:1.1em}
+.letter-content p{margin-bottom:.9em}
 .letter-content a{color:#b9d5f0;text-decoration:underline}
 .letter-content em,.letter-content i{color:#f6e9bf}
 .letter-content strong,.letter-content b{color:#ffe7a8}
@@ -450,13 +465,21 @@ input[type=file]{display:none}
   .card{padding:28px 20px}
   .card.wide{padding:20px 16px}
   h1{font-size:1.2rem}
-  /* On mobile the papyrus uses the full viewport width so the text has
-     enough room to breathe inside the "paper" area. */
-  .letter-wrap{padding:8px 0 32px}
-  .letter-panel,.papyrus-preview-bg{padding:10px 0 18px;border-radius:0;border-left:none;border-right:none}
-  .letter-header{padding:0 12px}
-  .progress-label-row,.progress-outer{margin-left:12px;margin-right:12px}
-  .papyrus-body{padding:14px 8% 22px}
+  /* On mobile the papyrus uses the full viewport width — zero outer padding
+     so the scroll touches the edges of the screen. */
+  .screen{padding:0}
+  .letter-wrap{padding:0;margin:0;max-width:100%}
+  .letter-panel,.papyrus-preview-bg{
+    padding:0;margin:0;border-radius:0;border:none;box-shadow:none;background:transparent;
+  }
+  .letter-header{padding:6px 10px;margin-bottom:6px}
+  /* Sticky bar on mobile: no negative margins, full width, tighter */
+  .progress-sticky{
+    margin:0;padding:8px 10px 6px;border-radius:0;
+    background:rgba(14,10,28,0.92);
+  }
+  .papyrus{max-width:100%;filter:none}
+  .papyrus-body{padding:8px 6% 14px}
   .letter-column{max-width:100%;padding:0}
   .letter-content{font-size:1.02rem;line-height:1.8;text-align:left}
 }
@@ -518,11 +541,13 @@ input[type=file]{display:none}
       </div>
     </div>
     <div class="letter-panel">
-      <div class="progress-label-row">
-        <span>Progreso</span>
-        <span id="progress-percent">0%</span>
+      <div class="progress-sticky">
+        <div class="progress-label-row">
+          <span>Progreso</span>
+          <span id="progress-percent">0%</span>
+        </div>
+        <div class="progress-outer"><div class="progress-inner" id="progress-inner"></div></div>
       </div>
-      <div class="progress-outer"><div class="progress-inner" id="progress-inner"></div></div>
 
       <div class="papyrus">
         <img class="papyrus-header-img" src="papyrus_header.png" alt="">
@@ -559,7 +584,9 @@ input[type=file]{display:none}
       <p style="font-size:.85rem;color:var(--muted);margin-bottom:12px">Así verá el usuario la carta. Mostrando progreso: <strong id="admin-progress-label">0%</strong> (m&aacute;ximo: <strong id="admin-max-progress">0%</strong>)</p>
       <div class="papyrus-preview-bg">
         <div class="letter-wrap" style="padding:0">
-          <div class="progress-outer"><div class="progress-inner" id="admin-progress-inner"></div></div>
+          <div class="progress-sticky" style="margin:0 0 14px;border-radius:10px">
+            <div class="progress-outer"><div class="progress-inner" id="admin-progress-inner"></div></div>
+          </div>
           <div class="papyrus" style="max-width:100%">
             <img class="papyrus-header-img" src="papyrus_header.png" alt="">
             <div class="papyrus-body">

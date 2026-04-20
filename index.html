@@ -48,7 +48,7 @@ body.letter-mode{
   padding:40px 32px;max-width:420px;width:100%;text-align:center;
   box-shadow:0 8px 32px rgba(0,0,0,.3);
 }
-.card.wide{max-width:680px;text-align:left;padding:28px 28px 20px}
+.card.wide{max-width:1100px;text-align:left;padding:28px 28px 20px}
 .lock{font-size:48px;margin-bottom:12px}
 h1{font-size:1.4rem;font-weight:600;margin-bottom:6px}
 .sub{color:var(--muted);font-size:.88rem;margin-bottom:28px}
@@ -252,26 +252,21 @@ input[type=file]{display:none}
   min-height:40vh;
   overflow:hidden;
 }
-/* Narrow column centered over the actual "paper" area, with subtle translucent
-   backing so the cream text is readable on the pixelated dark papyrus */
+/* Inner text column: just width-constrain + center over the "paper" area.
+   Text readability comes from the outer .letter-panel + strong text-shadow. */
 .letter-column{
   position:relative;z-index:1;
-  max-width:680px;margin:0 auto;padding:36px 40px;
-  background:rgba(14,10,28,0.45);
-  border:1px solid rgba(230,215,170,0.14);
-  border-radius:6px;
-  box-shadow:
-    0 6px 28px rgba(0,0,0,.45),
-    inset 0 0 40px rgba(230,215,170,.04);
-  backdrop-filter:blur(2px);
-  -webkit-backdrop-filter:blur(2px);
+  max-width:720px;margin:0 auto;padding:0;
 }
 .letter-content{
   font-family:'EB Garamond','Cormorant Garamond',Georgia,serif;
-  font-size:1.2rem;line-height:1.95;color:#f2e8cc;
+  font-size:1.2rem;line-height:1.95;color:#f5eed6;
   text-align:justify;hyphens:auto;
   letter-spacing:.2px;
-  text-shadow:0 1px 2px rgba(0,0,0,.75);
+  text-shadow:
+    0 1px 2px rgba(0,0,0,.95),
+    0 0 4px rgba(0,0,0,.75),
+    0 0 10px rgba(0,0,0,.55);
 }
 .letter-content h1,.letter-content h2,.letter-content h3{
   font-family:'Cinzel',serif;color:#f6e0a0;text-align:center;
@@ -356,14 +351,17 @@ input[type=file]{display:none}
   margin-top:20px;padding:14px 16px;background:rgba(248,113,113,.08);
   border:1px solid rgba(248,113,113,.2);border-radius:14px;
 }
-.papyrus-preview-bg{
-  background:
-    radial-gradient(ellipse at 15% 10%, rgba(60,110,170,0.28), transparent 60%),
-    radial-gradient(ellipse at 85% 90%, rgba(90,70,180,0.22), transparent 60%),
-    linear-gradient(160deg, #071428 0%, #0d2544 60%, #061328 100%);
+/* Unified semi-black panel that wraps progress bar + papyrus.
+   Used in BOTH user view (.letter-panel) and admin preview (.papyrus-preview-bg). */
+.letter-panel,.papyrus-preview-bg{
+  background:rgba(14,10,28,0.55);
+  border:1px solid rgba(230,215,170,0.12);
   border-radius:16px;
-  padding:24px 14px 30px;
-  margin:0 -6px;
+  padding:22px 22px 32px;
+  box-shadow:0 6px 28px rgba(0,0,0,.45);
+}
+@media(max-width:520px){
+  .letter-panel,.papyrus-preview-bg{padding:14px 10px 20px;border-radius:12px}
 }
 #page-disabled-toggle:checked+.slider{background:var(--err)!important}
 
@@ -371,10 +369,11 @@ input[type=file]{display:none}
   .card{padding:28px 20px}
   .card.wide{padding:20px 16px}
   h1{font-size:1.2rem}
-  .papyrus-body{padding:20px 4% 28px}
-  .letter-column{padding:22px 18px;border-radius:4px}
+  .papyrus-body{padding:18px 6% 26px}
+  .letter-column{max-width:100%;padding:0}
   .letter-content{font-size:1.02rem;line-height:1.8;text-align:left}
   .letter-content p{text-indent:1.2em}
+  .letter-wrap{padding:16px 8px 40px}
 }
 </style>
 </head>
@@ -433,24 +432,26 @@ input[type=file]{display:none}
         <button class="link-btn" onclick="logout()">Cerrar sesión</button>
       </div>
     </div>
-    <div class="progress-label-row">
-      <span>Progreso</span>
-      <span id="progress-percent">0%</span>
-    </div>
-    <div class="progress-outer"><div class="progress-inner" id="progress-inner"></div></div>
-
-    <div class="papyrus">
-      <img class="papyrus-header-img" src="papyrus_header.png" alt="">
-      <div class="papyrus-body">
-        <div class="letter-column">
-          <div id="continue-banner" class="continue-banner hidden">
-            <span class="text">La última vez llegaste al <strong id="continue-percent">0%</strong>. ¿Quieres seguir desde ahí?</span>
-            <button onclick="resumeReading()">Continuar</button>
-          </div>
-          <div id="letter-content" class="letter-content"></div>
-        </div>
+    <div class="letter-panel">
+      <div class="progress-label-row">
+        <span>Progreso</span>
+        <span id="progress-percent">0%</span>
       </div>
-      <img class="papyrus-footer-img" src="papyrus_footer.png" alt="">
+      <div class="progress-outer"><div class="progress-inner" id="progress-inner"></div></div>
+
+      <div class="papyrus">
+        <img class="papyrus-header-img" src="papyrus_header.png" alt="">
+        <div class="papyrus-body">
+          <div class="letter-column">
+            <div id="continue-banner" class="continue-banner hidden">
+              <span class="text">La última vez llegaste al <strong id="continue-percent">0%</strong>. ¿Quieres seguir desde ahí?</span>
+              <button onclick="resumeReading()">Continuar</button>
+            </div>
+            <div id="letter-content" class="letter-content"></div>
+          </div>
+        </div>
+        <img class="papyrus-footer-img" src="papyrus_footer.png" alt="">
+      </div>
     </div>
   </div>
 </div>
@@ -589,7 +590,7 @@ input[type=file]{display:none}
 <script>
 var GITHUB_API = "https://api.github.com/repos/AndresRomero2001/letter/contents/data.json";
 var ADMIN_HASH = "d8e02dc389f474320bf6ca93f9ae00fce62e319a52b29e7de04cb0658dda168d";
-var ENC_ADMIN_TOKEN = "37cadae730f301fa406093a7afad0616:e09f77c7366471657f08da3d:02e00d7d536c1953eff617d56b581ee9:d5c49c4b66acf2506b19a9ee55e9690ea62f05c40138127dc9eb44524181c90731d7f448890edd0f";
+var ENC_ADMIN_TOKEN = "389d0a5b0fdc02389f5128f77148163e:2b6fa3f1eb13214a17fe2778:5d5e931e5f616d4f241733e6fa2696bf:9dd8a39ea50508c781eb7a457b9f2453afff874a2cbf47e6db7d817b00be283cdb57ec8bc4a02732";
 var ACCEPT_KEY = "letter_accepted_v1";
 
 var data = null;

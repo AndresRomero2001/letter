@@ -63,21 +63,23 @@ function encryptToken(token, password) {
 const encAdminToken = encryptToken(ghToken, ADMIN_CODE);
 const encUserToken = encryptToken(ghToken, DEFAULT_USER_CODE);
 
-// ── Write data.json ─────────────────────────────────────────────────
-const dataJson = {
-  userCode: DEFAULT_USER_CODE,
-  encUserToken: encUserToken,
-  disclaimer: DEFAULT_DISCLAIMER,
-  letter: DEFAULT_LETTER,
-  pageDisabled: false,
-  progress: { maxPercent: 0, lastPercent: 0, lastUpdated: "" },
-  logs: []
-};
-fs.writeFileSync(
-  path.join(__dirname, "data.json"),
-  JSON.stringify(dataJson, null, 2)
-);
-console.log("data.json created");
+// ── Write data.json (only if it does not already exist) ────────────
+const dataPath = path.join(__dirname, "data.json");
+if (fs.existsSync(dataPath) && !process.argv.includes("--force-data")) {
+  console.log("data.json already exists — leaving it untouched (pass --force-data to overwrite)");
+} else {
+  const dataJson = {
+    userCode: DEFAULT_USER_CODE,
+    encUserToken: encUserToken,
+    disclaimer: DEFAULT_DISCLAIMER,
+    letter: DEFAULT_LETTER,
+    pageDisabled: false,
+    progress: { maxPercent: 0, lastPercent: 0, lastUpdated: "" },
+    logs: []
+  };
+  fs.writeFileSync(dataPath, JSON.stringify(dataJson, null, 2));
+  console.log("data.json created");
+}
 
 // ── HTML template ───────────────────────────────────────────────────
 function buildHTML() {
@@ -101,12 +103,14 @@ function buildHTML() {
   --accent: #8b5cf6; --accent-d: #6d28d9;
   --text: #fff; --muted: rgba(255,255,255,0.55);
   --err: #f87171; --ok: #34d399;
-  --papyrus-ink: #3a2618;
-  --papyrus-ink-soft: rgba(58,38,24,0.75);
-  --papyrus-roll-1: #4a3522;
-  --papyrus-roll-2: #d4b896;
-  --papyrus-roll-3: #a88560;
-  --papyrus-roll-4: #6b4a2b;
+  --papyrus-ink: #0d2038;
+  --papyrus-ink-soft: rgba(13,32,56,0.72);
+  --crystal-core: #0a1828;
+  --crystal-dark: #1e3a5a;
+  --crystal-mid: #587da5;
+  --crystal-mid-light: #87adcb;
+  --crystal-light: #b4d2e8;
+  --crystal-highlight: #dae9f3;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{
@@ -117,9 +121,9 @@ body{
 }
 body.letter-mode{
   background:
-    radial-gradient(ellipse at 20% 10%, rgba(80,50,30,0.55), transparent 60%),
-    radial-gradient(ellipse at 80% 90%, rgba(60,40,80,0.45), transparent 60%),
-    linear-gradient(160deg, #120a06 0%, #1f130a 45%, #2a1810 75%, #120a06 100%);
+    radial-gradient(ellipse at 15% 10%, rgba(60,110,170,0.35), transparent 60%),
+    radial-gradient(ellipse at 85% 90%, rgba(90,70,180,0.28), transparent 60%),
+    linear-gradient(160deg, #040912 0%, #081628 40%, #0c2442 72%, #040b18 100%);
   background-attachment: fixed;
 }
 .screen{
@@ -289,83 +293,157 @@ input[type=file]{display:none}
 }
 .letter-header .title{
   font-family:'Cinzel',serif;font-size:1.1rem;letter-spacing:3px;
-  color:rgba(231,201,160,.85);text-transform:uppercase;
+  color:rgba(180,218,245,.88);text-transform:uppercase;
+  text-shadow:0 0 20px rgba(120,180,230,.3);
 }
 .letter-header .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .progress-outer{
-  width:100%;height:6px;background:rgba(212,184,150,.12);border-radius:3px;
+  width:100%;height:6px;background:rgba(180,218,245,.1);border-radius:3px;
   overflow:hidden;margin-bottom:14px;position:relative;
-  border:1px solid rgba(212,184,150,.18);
+  border:1px solid rgba(180,218,245,.2);
 }
 .progress-inner{
   height:100%;width:0%;border-radius:3px;transition:width .3s ease;
-  background:linear-gradient(90deg,#c9a572,#e7c9a0,#c9a572);
-  box-shadow:0 0 8px rgba(231,201,160,.5);
+  background:linear-gradient(90deg,#5d91b8,#b3d5ec,#dae9f3,#b3d5ec,#5d91b8);
+  box-shadow:0 0 10px rgba(180,220,255,.55);
 }
 .progress-label-row{
   display:flex;justify-content:space-between;font-size:.78rem;
-  color:rgba(231,201,160,.6);margin-bottom:10px;letter-spacing:1px;
+  color:rgba(180,218,245,.65);margin-bottom:10px;letter-spacing:1px;
 }
 
 .papyrus{
-  position:relative;width:100%;padding:52px 0;
-  filter:drop-shadow(0 20px 40px rgba(0,0,0,.5));
+  position:relative;width:100%;padding:46px 0;
+  filter:drop-shadow(0 22px 50px rgba(5,15,40,.55));
 }
+/* Rolled-scroll cylinder with concentric rings at each end */
 .papyrus-roll{
-  position:absolute;left:-14px;right:-14px;height:52px;z-index:3;
+  position:absolute;left:-6px;right:-6px;height:46px;z-index:3;
+  pointer-events:none;
   background:
     linear-gradient(180deg,
-      rgba(74,53,34,0.98) 0%,
-      rgba(168,133,96,0.95) 10%,
-      rgba(212,184,150,1) 24%,
-      rgba(235,210,170,1) 38%,
-      rgba(200,166,120,1) 52%,
-      rgba(160,123,80,1) 68%,
-      rgba(107,74,43,1) 84%,
-      rgba(60,40,22,0.98) 100%);
-  border-radius:30px / 50%;
+      #0a1828 0%,
+      #1e3a5a 7%,
+      #4a7198 18%,
+      #87adcb 32%,
+      #c2dbef 48%,
+      #a2c4dd 58%,
+      #6d94bb 72%,
+      #2e4d70 86%,
+      #0a1828 100%);
+  border-radius:4px;
   box-shadow:
-    0 6px 18px rgba(30,15,5,.6),
-    inset 4px 0 6px rgba(255,230,190,.35),
-    inset -4px 0 6px rgba(255,230,190,.35),
-    inset 0 2px 4px rgba(255,240,210,.4),
-    inset 0 -2px 4px rgba(40,20,10,.5);
+    0 8px 22px rgba(5,15,40,.55),
+    inset 0 2px 3px rgba(255,255,255,.4),
+    inset 0 -2px 3px rgba(0,8,22,.55);
 }
+/* Subtle inner lines on the rod to suggest depth */
+.papyrus-roll::after{
+  content:"";position:absolute;top:0;bottom:0;left:42px;right:42px;pointer-events:none;
+  background:
+    linear-gradient(180deg,
+      transparent 30%,
+      rgba(255,255,255,.18) 38%,
+      transparent 44%,
+      rgba(0,10,25,.35) 58%,
+      transparent 64%);
+}
+/* LEFT spiral end-cap (rolled paper cross-section) */
 .papyrus-roll::before{
-  content:"";position:absolute;top:50%;left:20px;right:20px;height:2px;
-  background:linear-gradient(90deg,transparent,rgba(40,20,5,.35),transparent);
-  transform:translateY(-50%);
-  box-shadow:0 -6px 0 -4px rgba(40,20,5,.2),0 6px 0 -4px rgba(40,20,5,.2);
+  content:"";position:absolute;top:-9px;bottom:-9px;left:-22px;width:64px;
+  pointer-events:none;border-radius:50%;
+  background:
+    radial-gradient(circle at 50% 50%,
+      #0a1828 0 6%,
+      #1e3a5a 6% 8%,
+      #587da5 8% 14%,
+      #1e3a5a 14% 16%,
+      #87adcb 16% 24%,
+      #1e3a5a 24% 26%,
+      #587da5 26% 34%,
+      #1e3a5a 34% 36%,
+      #b4d2e8 36% 46%,
+      #1e3a5a 46% 48%,
+      #87adcb 48% 60%,
+      #1e3a5a 60% 62%,
+      #dae9f3 62% 74%,
+      #6d94bb 74% 86%,
+      #1e3a5a 86% 94%,
+      #0a1828 94% 100%);
+  box-shadow:
+    0 6px 16px rgba(5,15,40,.65),
+    inset 0 2px 4px rgba(255,255,255,.4),
+    inset 0 -2px 4px rgba(0,8,22,.55),
+    inset 2px 0 3px rgba(255,255,255,.25),
+    inset -2px 0 3px rgba(0,8,22,.4);
+}
+/* RIGHT spiral end-cap (an inner element since ::before/::after already used) */
+.papyrus-roll-right{
+  position:absolute;top:-9px;bottom:-9px;right:-22px;width:64px;
+  pointer-events:none;border-radius:50%;z-index:4;
+  background:
+    radial-gradient(circle at 50% 50%,
+      #0a1828 0 6%,
+      #1e3a5a 6% 8%,
+      #587da5 8% 14%,
+      #1e3a5a 14% 16%,
+      #87adcb 16% 24%,
+      #1e3a5a 24% 26%,
+      #587da5 26% 34%,
+      #1e3a5a 34% 36%,
+      #b4d2e8 36% 46%,
+      #1e3a5a 46% 48%,
+      #87adcb 48% 60%,
+      #1e3a5a 60% 62%,
+      #dae9f3 62% 74%,
+      #6d94bb 74% 86%,
+      #1e3a5a 86% 94%,
+      #0a1828 94% 100%);
+  box-shadow:
+    0 6px 16px rgba(5,15,40,.65),
+    inset 0 2px 4px rgba(255,255,255,.4),
+    inset 0 -2px 4px rgba(0,8,22,.55),
+    inset 2px 0 3px rgba(255,255,255,.25),
+    inset -2px 0 3px rgba(0,8,22,.4);
+}
+/* Small bright highlight on each end-cap to suggest glossy glass */
+.papyrus-roll::before,.papyrus-roll-right{
+  background-blend-mode:normal;
 }
 .papyrus-roll.top{top:0}
 .papyrus-roll.bottom{bottom:0}
 .papyrus-body{
   position:relative;
   background:
-    linear-gradient(180deg, rgba(245,225,190,0.18) 0%, rgba(225,200,160,0.22) 50%, rgba(240,218,185,0.18) 100%);
-  backdrop-filter:blur(22px) saturate(160%);
-  -webkit-backdrop-filter:blur(22px) saturate(160%);
-  border-left:1px solid rgba(200,165,115,.35);
-  border-right:1px solid rgba(200,165,115,.35);
+    linear-gradient(180deg,
+      rgba(195,228,255,0.16) 0%,
+      rgba(150,200,245,0.24) 30%,
+      rgba(170,215,250,0.22) 65%,
+      rgba(195,228,255,0.16) 100%);
+  backdrop-filter:blur(30px) saturate(180%);
+  -webkit-backdrop-filter:blur(30px) saturate(180%);
+  border-left:1px solid rgba(180,220,255,.3);
+  border-right:1px solid rgba(180,220,255,.3);
   box-shadow:
-    inset 0 0 90px rgba(110,75,35,.18),
-    inset 50px 0 60px -40px rgba(110,75,35,.15),
-    inset -50px 0 60px -40px rgba(110,75,35,.15),
-    0 2px 0 0 rgba(60,40,20,.25);
-  padding:70px 56px 80px;
+    inset 0 0 120px rgba(80,140,210,.2),
+    inset 60px 0 90px -55px rgba(170,215,250,.18),
+    inset -60px 0 90px -55px rgba(170,215,250,.18),
+    inset 0 30px 50px -25px rgba(220,235,250,.15),
+    0 2px 0 0 rgba(30,60,100,.3);
+  padding:78px 56px 88px;
   min-height:62vh;
   overflow:hidden;
 }
 .papyrus-body::before{
-  content:"";position:absolute;inset:0;pointer-events:none;opacity:.35;
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.24  0 0 0 0 0.15  0 0 0 0.22 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-  mix-blend-mode:multiply;
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.22;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.18  0 0 0 0 0.34  0 0 0 0 0.54  0 0 0 0.22 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  mix-blend-mode:overlay;
 }
 .papyrus-body::after{
   content:"";position:absolute;inset:0;pointer-events:none;
   background:
-    repeating-linear-gradient(90deg,transparent 0,transparent 220px,rgba(110,75,35,.04) 221px,rgba(110,75,35,.04) 222px),
-    repeating-linear-gradient(180deg,transparent 0,transparent 180px,rgba(110,75,35,.03) 181px,rgba(110,75,35,.03) 182px);
+    radial-gradient(ellipse at 28% 18%, rgba(225,240,255,.22), transparent 45%),
+    radial-gradient(ellipse at 75% 85%, rgba(170,210,245,.14), transparent 50%);
 }
 .letter-content{
   position:relative;z-index:1;
@@ -375,8 +453,9 @@ input[type=file]{display:none}
   letter-spacing:.2px;
 }
 .letter-content h1,.letter-content h2,.letter-content h3{
-  font-family:'Cinzel',serif;color:#2a1a0e;text-align:center;
+  font-family:'Cinzel',serif;color:#08172b;text-align:center;
   margin:.5em 0 .8em;letter-spacing:2px;
+  text-shadow:0 1px 1px rgba(220,238,255,.35);
 }
 .letter-content h2{font-size:1.5rem}
 .letter-content h3{font-size:1.15rem;letter-spacing:1px}
@@ -384,36 +463,39 @@ input[type=file]{display:none}
 .letter-content p:first-of-type{text-indent:0}
 .letter-content p:first-of-type::first-letter{
   font-family:'Cinzel',serif;font-size:3.2rem;float:left;line-height:.9;
-  padding:4px 10px 0 0;color:#5a3a1e;
+  padding:4px 10px 0 0;color:#1a3860;
+  text-shadow:0 1px 2px rgba(220,238,255,.4);
 }
-.letter-content a{color:#6d4820;text-decoration:underline}
-.letter-content em,.letter-content i{color:#4a2e15}
-.letter-content strong,.letter-content b{color:#2a1a0e}
+.letter-content a{color:#1d4a7b;text-decoration:underline}
+.letter-content em,.letter-content i{color:#153660}
+.letter-content strong,.letter-content b{color:#08172b}
 .letter-content hr{
   border:none;height:1px;margin:24px auto;width:60%;
-  background:linear-gradient(90deg,transparent,rgba(110,75,35,.5),transparent);
+  background:linear-gradient(90deg,transparent,rgba(30,60,100,.5),transparent);
 }
 .letter-content img{max-width:100%;border-radius:6px;margin:12px 0;
-  box-shadow:0 4px 12px rgba(60,40,20,.3);}
+  box-shadow:0 4px 14px rgba(10,30,60,.3);}
 .letter-content blockquote{
-  border-left:3px solid rgba(110,75,35,.4);padding-left:14px;
+  border-left:3px solid rgba(30,60,100,.45);padding-left:14px;
   margin:14px 0;font-style:italic;color:var(--papyrus-ink-soft);
 }
 
 .continue-banner{
   position:relative;z-index:2;margin-bottom:24px;
-  background:rgba(110,75,35,.12);border:1px solid rgba(110,75,35,.3);
+  background:rgba(40,90,150,.14);border:1px solid rgba(140,190,230,.35);
   border-radius:12px;padding:14px 18px;
   display:flex;align-items:center;justify-content:space-between;
   gap:12px;flex-wrap:wrap;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
 }
-.continue-banner .text{font-family:'EB Garamond',serif;color:#4a2e15;font-size:.95rem}
+.continue-banner .text{font-family:'EB Garamond',serif;color:#0f2c4a;font-size:.95rem}
 .continue-banner button{
-  background:linear-gradient(135deg,#8b5e2b,#5a3a1e);color:#f4e4c1;
+  background:linear-gradient(135deg,#3a6b99,#1a3a62);color:#e6f1fa;
   border:none;padding:8px 16px;border-radius:10px;cursor:pointer;
   font-size:.85rem;font-weight:600;font-family:'EB Garamond',serif;letter-spacing:.5px;
+  box-shadow:0 2px 8px rgba(15,40,80,.3);
 }
-.continue-banner button:hover{box-shadow:0 4px 12px rgba(90,58,30,.4)}
+.continue-banner button:hover{box-shadow:0 4px 14px rgba(30,80,140,.5)}
 
 .letter-footer-row{
   width:100%;display:flex;justify-content:space-between;align-items:center;
@@ -421,7 +503,7 @@ input[type=file]{display:none}
 }
 .letter-footer-row .progress-text{
   font-family:'Cinzel',serif;font-size:.8rem;letter-spacing:2px;
-  color:rgba(231,201,160,.7);
+  color:rgba(180,218,245,.7);
 }
 
 /* Logs table */
@@ -452,17 +534,29 @@ input[type=file]{display:none}
   margin-top:20px;padding:14px 16px;background:rgba(248,113,113,.08);
   border:1px solid rgba(248,113,113,.2);border-radius:14px;
 }
+.papyrus-preview-bg{
+  background:
+    radial-gradient(ellipse at 15% 10%, rgba(60,110,170,0.28), transparent 60%),
+    radial-gradient(ellipse at 85% 90%, rgba(90,70,180,0.22), transparent 60%),
+    linear-gradient(160deg, #071428 0%, #0d2544 60%, #061328 100%);
+  border-radius:16px;
+  padding:24px 14px 30px;
+  margin:0 -6px;
+}
 #page-disabled-toggle:checked+.slider{background:var(--err)!important}
 
 @media(max-width:520px){
   .card{padding:28px 20px}
   .card.wide{padding:20px 16px}
   h1{font-size:1.2rem}
-  .papyrus-body{padding:50px 26px 60px}
+  .papyrus-body{padding:58px 24px 66px}
   .letter-content{font-size:1.05rem;line-height:1.85;text-align:left}
   .letter-content p{text-indent:1.2em}
-  .papyrus-roll{height:40px;border-radius:24px / 50%}
-  .papyrus{padding:40px 0}
+  .papyrus-roll{height:36px;left:-4px;right:-4px}
+  .papyrus-roll::before,.papyrus-roll-right{width:50px;top:-7px;bottom:-7px}
+  .papyrus-roll::before{left:-17px}
+  .papyrus-roll-right{right:-17px}
+  .papyrus{padding:36px 0}
 }
 </style>
 </head>
@@ -528,7 +622,7 @@ input[type=file]{display:none}
     <div class="progress-outer"><div class="progress-inner" id="progress-inner"></div></div>
 
     <div class="papyrus">
-      <div class="papyrus-roll top"></div>
+      <div class="papyrus-roll top"><div class="papyrus-roll-right"></div></div>
       <div class="papyrus-body">
         <div id="continue-banner" class="continue-banner hidden">
           <span class="text">La última vez llegaste al <strong id="continue-percent">0%</strong>. ¿Quieres seguir desde ahí?</span>
@@ -536,7 +630,7 @@ input[type=file]{display:none}
         </div>
         <div id="letter-content" class="letter-content"></div>
       </div>
-      <div class="papyrus-roll bottom"></div>
+      <div class="papyrus-roll bottom"><div class="papyrus-roll-right"></div></div>
     </div>
   </div>
 </div>
@@ -557,14 +651,16 @@ input[type=file]{display:none}
     <!-- Panel: view letter (admin sees the papyrus) -->
     <div id="panel-view-letter" class="panel">
       <p style="font-size:.85rem;color:var(--muted);margin-bottom:12px">Así verá el usuario la carta. Mostrando progreso: <strong id="admin-progress-label">0%</strong> (m&aacute;ximo: <strong id="admin-max-progress">0%</strong>)</p>
-      <div class="letter-wrap" style="padding:0">
-        <div class="progress-outer"><div class="progress-inner" id="admin-progress-inner"></div></div>
-        <div class="papyrus" style="max-width:100%">
-          <div class="papyrus-roll top"></div>
-          <div class="papyrus-body">
-            <div id="admin-letter-content" class="letter-content"></div>
+      <div class="papyrus-preview-bg">
+        <div class="letter-wrap" style="padding:0">
+          <div class="progress-outer"><div class="progress-inner" id="admin-progress-inner"></div></div>
+          <div class="papyrus" style="max-width:100%">
+            <div class="papyrus-roll top"><div class="papyrus-roll-right"></div></div>
+            <div class="papyrus-body">
+              <div id="admin-letter-content" class="letter-content"></div>
+            </div>
+            <div class="papyrus-roll bottom"><div class="papyrus-roll-right"></div></div>
           </div>
-          <div class="papyrus-roll bottom"></div>
         </div>
       </div>
     </div>

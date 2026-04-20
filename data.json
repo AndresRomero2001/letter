@@ -7,7 +7,7 @@
   "progress": {
     "maxPercent": 99.93926003121135,
     "lastPercent": 0,
-    "lastUpdated": "2026-04-20T11:36:36.857Z",
+    "lastUpdated": "2026-04-20T11:37:29.472Z",
     "finishedLogged": true
   },
   "logs": [
@@ -172,33 +172,6 @@
       "role": "user",
       "ip": "88.1.48.71",
       "fp": "4bfd9484"
-    },
-    {
-      "ts": "20/4/2026, 13:36:43",
-      "tsISO": "2026-04-20T11:36:43.872Z",
-      "type": "login",
-      "detail": "user",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "d57d2142"
-    },
-    {
-      "ts": "20/4/2026, 13:36:44",
-      "tsISO": "2026-04-20T11:36:44.776Z",
-      "type": "disclaimer_shown",
-      "detail": "",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "d57d2142"
-    },
-    {
-      "ts": "20/4/2026, 13:36:46",
-      "tsISO": "2026-04-20T11:36:46.548Z",
-      "type": "read",
-      "detail": "Aceptó leer la carta",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "d57d2142"
     }
   ]
 }

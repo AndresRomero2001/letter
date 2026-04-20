@@ -115,7 +115,7 @@ function buildHTML() {
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{
-  min-height:100vh;
+  min-height:100vh;overflow-x:hidden;
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   background:linear-gradient(135deg,var(--bg1),var(--bg2),var(--bg3));
   color:var(--text);
@@ -133,7 +133,7 @@ body.letter-mode{
   padding:40px 32px;max-width:420px;width:100%;text-align:center;
   box-shadow:0 8px 32px rgba(0,0,0,.3);
 }
-.card.wide{max-width:1100px;text-align:left;padding:28px 28px 20px}
+.card.wide{max-width:1300px;text-align:left;padding:28px 28px 20px}
 .lock{font-size:48px;margin-bottom:12px}
 h1{font-size:1.4rem;font-weight:600;margin-bottom:6px}
 .sub{color:var(--muted);font-size:.88rem;margin-bottom:28px}
@@ -282,7 +282,7 @@ input[type=file]{display:none}
 
 /* ─────────── PAPYRUS ─────────── */
 .letter-wrap{
-  width:100%;max-width:1200px;margin:0 auto;padding:30px 16px 60px;
+  width:100%;max-width:1300px;margin:0 auto;padding:30px 16px 60px;
   display:flex;flex-direction:column;align-items:center;
 }
 .letter-header{
@@ -312,7 +312,7 @@ input[type=file]{display:none}
 
 /* Image-based papyrus: header PNG + tiled body PNG + footer PNG */
 .papyrus{
-  position:relative;width:100%;max-width:1200px;margin:0 auto;padding:0;
+  position:relative;width:100%;max-width:1300px;margin:0 auto;padding:0;
   filter:drop-shadow(0 22px 50px rgba(0,0,0,.55));
 }
 .papyrus-header-img,.papyrus-footer-img{
@@ -337,11 +337,11 @@ input[type=file]{display:none}
   min-height:40vh;
   overflow:hidden;
 }
-/* Inner text column: just width-constrain + center over the "paper" area.
-   Text readability comes from the outer .letter-panel + strong text-shadow. */
+/* Inner text column: narrower than the papyrus body so the text fits inside
+   the "paper" region (the body is narrower than the header/footer rolls). */
 .letter-column{
   position:relative;z-index:1;
-  max-width:720px;margin:0 auto;padding:0;
+  max-width:560px;margin:0 auto;padding:0;
 }
 .letter-content{
   font-family:'EB Garamond','Cormorant Garamond',Georgia,serif;
@@ -353,20 +353,19 @@ input[type=file]{display:none}
     0 0 4px rgba(0,0,0,.75),
     0 0 10px rgba(0,0,0,.55);
 }
+/* Headings: use the body serif (EB Garamond) so user's case is preserved
+   (Cinzel was forcing all-caps / small-caps). Gold color + text-shadow keeps
+   the "title" feel. */
 .letter-content h1,.letter-content h2,.letter-content h3{
-  font-family:'Cinzel',serif;color:#f6e0a0;text-align:center;
-  margin:.5em 0 .8em;letter-spacing:2px;
+  font-family:'EB Garamond','Cormorant Garamond',Georgia,serif;
+  font-weight:600;color:#f6e0a0;text-align:center;
+  margin:.5em 0 .8em;letter-spacing:.3px;line-height:1.25;
   text-shadow:0 2px 6px rgba(0,0,0,.85);
 }
-.letter-content h2{font-size:1.5rem}
-.letter-content h3{font-size:1.15rem;letter-spacing:1px}
-.letter-content p{margin-bottom:1.1em;text-indent:1.8em}
-.letter-content p:first-of-type{text-indent:0}
-.letter-content p:first-of-type::first-letter{
-  font-family:'Cinzel',serif;font-size:3.2rem;float:left;line-height:.9;
-  padding:4px 10px 0 0;color:#f6e0a0;
-  text-shadow:0 2px 6px rgba(0,0,0,.85);
-}
+.letter-content h1{font-size:1.85rem}
+.letter-content h2{font-size:1.55rem}
+.letter-content h3{font-size:1.25rem}
+.letter-content p{margin-bottom:1.1em}
 .letter-content a{color:#b9d5f0;text-decoration:underline}
 .letter-content em,.letter-content i{color:#f6e9bf}
 .letter-content strong,.letter-content b{color:#ffe7a8}
@@ -445,20 +444,21 @@ input[type=file]{display:none}
   padding:22px 22px 32px;
   box-shadow:0 6px 28px rgba(0,0,0,.45);
 }
-@media(max-width:520px){
-  .letter-panel,.papyrus-preview-bg{padding:14px 10px 20px;border-radius:12px}
-}
 #page-disabled-toggle:checked+.slider{background:var(--err)!important}
 
 @media(max-width:520px){
   .card{padding:28px 20px}
   .card.wide{padding:20px 16px}
   h1{font-size:1.2rem}
-  .papyrus-body{padding:18px 6% 26px}
+  /* On mobile the papyrus uses the full viewport width so the text has
+     enough room to breathe inside the "paper" area. */
+  .letter-wrap{padding:8px 0 32px}
+  .letter-panel,.papyrus-preview-bg{padding:10px 0 18px;border-radius:0;border-left:none;border-right:none}
+  .letter-header{padding:0 12px}
+  .progress-label-row,.progress-outer{margin-left:12px;margin-right:12px}
+  .papyrus-body{padding:14px 8% 22px}
   .letter-column{max-width:100%;padding:0}
   .letter-content{font-size:1.02rem;line-height:1.8;text-align:left}
-  .letter-content p{text-indent:1.2em}
-  .letter-wrap{padding:16px 8px 40px}
 }
 </style>
 </head>

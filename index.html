@@ -302,8 +302,11 @@ input[type=file]{display:none}
 }
 
 /* Image-based papyrus: header PNG + tiled body PNG + footer PNG */
+/* max-width controls the scroll width. letter-column inside is capped at
+   760px, so widening the papyrus only widens the decorative pixel border
+   on either side — the text column stays the same width. */
 .papyrus{
-  position:relative;width:100%;max-width:1300px;margin:0 auto;padding:0;
+  position:relative;width:100%;max-width:1500px;margin:0 auto;padding:0;
   filter:drop-shadow(0 22px 50px rgba(0,0,0,.55));
 }
 .papyrus-header-img,.papyrus-footer-img{
@@ -762,7 +765,7 @@ input[type=file]{display:none}
 <script>
 var GITHUB_API = "https://api.github.com/repos/AndresRomero2001/letter/contents/data.json";
 var ADMIN_HASH = "d8e02dc389f474320bf6ca93f9ae00fce62e319a52b29e7de04cb0658dda168d";
-var ENC_ADMIN_TOKEN = "4a29f052e42e8ce432248a7b2323ead5:adc28baf18e1241149b8b6d1:14a354bffe217d208df32928a17f29c4:47f8671d660f0557587a456f770af7d80af0dbb013e41b249b89afd5edb745bcbede538a6776e697";
+var ENC_ADMIN_TOKEN = "c39d9b112ae8e95098237c774096c722:9de37096d19b9ffecaeb8404:3b4b5c69407f50e1d3bb956be5152fe8:e0a597b1f239dfd3bd963be558e19dd1df30dab42ed92a4ed887a1746aa40bdfc96625dcb951aeb8";
 var ACCEPT_KEY = "letter_accepted_v1";
 var LAST_PERCENT_KEY = "letter_last_percent_v1";
 

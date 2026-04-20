@@ -391,8 +391,11 @@ input[type=file]{display:none}
 }
 
 /* Image-based papyrus: header PNG + tiled body PNG + footer PNG */
+/* max-width controls the scroll width. letter-column inside is capped at
+   760px, so widening the papyrus only widens the decorative pixel border
+   on either side — the text column stays the same width. */
 .papyrus{
-  position:relative;width:100%;max-width:1300px;margin:0 auto;padding:0;
+  position:relative;width:100%;max-width:1500px;margin:0 auto;padding:0;
   filter:drop-shadow(0 22px 50px rgba(0,0,0,.55));
 }
 .papyrus-header-img,.papyrus-footer-img{

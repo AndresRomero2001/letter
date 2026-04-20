@@ -14,6 +14,8 @@ const DEFAULT_DISCLAIMER =
 const DEFAULT_LETTER =
   "<h2>Para ti</h2>" +
   "<p>Aquí empieza la carta. El administrador puede editarla desde el panel.</p>";
+const DEFAULT_FAREWELL =
+  "<p>Respeto tu decisión. Puedes volver cuando quieras leerla, estará aquí esperando.</p>";
 const PAGE_TITLE = "Una carta para ti";
 const GITHUB_OWNER = "AndresRomero2001";
 const GITHUB_REPO = "letter";
@@ -73,6 +75,7 @@ if (fs.existsSync(dataPath) && !process.argv.includes("--force-data")) {
     encUserToken: encUserToken,
     disclaimer: DEFAULT_DISCLAIMER,
     letter: DEFAULT_LETTER,
+    farewell: DEFAULT_FAREWELL,
     textAlign: "justify",
     pageDisabled: false,
     progress: { maxPercent: 0, lastPercent: 0, lastUpdated: "" },
@@ -117,7 +120,10 @@ function buildHTML() {
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{
-  min-height:100vh;overflow-x:hidden;
+  /* overflow-x:clip prevents horizontal scroll WITHOUT turning body into
+     a scroll container. overflow-x:hidden does turn body into a scroll
+     container, which was breaking position:sticky for the progress bar. */
+  min-height:100vh;overflow-x:clip;
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   background:linear-gradient(135deg,var(--bg1),var(--bg2),var(--bg3));
   color:var(--text);
@@ -181,6 +187,22 @@ input:focus{border-color:rgba(139,92,246,.8);box-shadow:0 0 0 4px rgba(139,92,24
 .tab:hover{background:rgba(255,255,255,.1);color:#fff}
 .tab.active{background:rgba(139,92,246,.25);color:var(--accent)}
 
+/* Segmented pill group (used for text-align picker) */
+.segmented{
+  display:inline-flex;background:rgba(255,255,255,.05);padding:4px;
+  border:1px solid rgba(255,255,255,.12);border-radius:12px;gap:2px;
+}
+.segmented-btn{
+  flex:1;padding:10px 18px;border:none;border-radius:8px;cursor:pointer;
+  background:transparent;color:var(--muted);font-size:.9rem;font-weight:500;
+  transition:.15s;white-space:nowrap;
+}
+.segmented-btn:hover{background:rgba(255,255,255,.06);color:#fff}
+.segmented-btn.active{
+  background:linear-gradient(135deg,var(--accent),var(--accent-d));
+  color:#fff;box-shadow:0 2px 8px rgba(139,92,246,.35);
+}
+
 /* Rich text toolbar */
 .toolbar{
   display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;
@@ -193,14 +215,13 @@ input:focus{border-color:rgba(139,92,246,.8);box-shadow:0 0 0 4px rgba(139,92,24
   transition:.15s;
 }
 .toolbar button:hover{background:rgba(139,92,246,.3)}
-.toolbar select{
-  height:36px;border:none;border-radius:8px;
-  background:rgba(255,255,255,.08);color:#fff;cursor:pointer;
-  padding:0 8px;font-size:.82rem;outline:none;
-  transition:.15s;
+.toolbar .size-btn{
+  width:auto;padding:0 10px;gap:4px;font-weight:600;
 }
-.toolbar select:hover{background:rgba(139,92,246,.3)}
-.toolbar select option{background:#1f1b3a;color:#fff}
+.toolbar .toolbar-sep{
+  width:1px;height:24px;background:rgba(255,255,255,.12);
+  align-self:center;margin:0 4px;
+}
 
 .richtext{
   min-height:200px;max-height:500px;overflow-y:auto;
@@ -303,7 +324,17 @@ input[type=file]{display:none}
 /* Farewell screen */
 .farewell-card{text-align:center}
 .farewell-card .icon{font-size:48px;margin-bottom:12px}
-.farewell-card p{color:rgba(255,255,255,.8);line-height:1.7;margin-bottom:24px}
+.farewell-card p{color:rgba(255,255,255,.8);line-height:1.7;margin-bottom:10px}
+.farewell-content{
+  color:rgba(255,255,255,.85);line-height:1.7;margin:0 0 24px;
+  max-height:40vh;overflow-y:auto;padding-right:8px;
+  scrollbar-width:thin;scrollbar-color:rgba(139,92,246,.55) rgba(255,255,255,.05);
+}
+.farewell-content::-webkit-scrollbar{width:8px}
+.farewell-content::-webkit-scrollbar-thumb{background:rgba(139,92,246,.5);border-radius:4px}
+.farewell-content h2{font-size:1.1rem;margin-bottom:8px;color:#fff}
+.farewell-content p{margin-bottom:8px;color:rgba(255,255,255,.85)}
+.farewell-content a{color:#a78bfa}
 
 /* ─────────── PAPYRUS ─────────── */
 .letter-wrap{
@@ -569,7 +600,7 @@ input[type=file]{display:none}
   <div class="card farewell-card fade-in">
     <div class="icon">&#128591;</div>
     <h1>Entendido</h1>
-    <p>Respeto tu decisión. Puedes volver cuando quieras leerla, estará aquí esperando.</p>
+    <div id="farewell-content" class="farewell-content"></div>
     <button class="btn" style="max-width:220px;margin:0 auto" onclick="backToLogin()">Volver al inicio</button>
   </div>
 </div>
@@ -618,6 +649,7 @@ input[type=file]{display:none}
       <button class="tab" data-tab="view-disclaimer">Ver disclaimer</button>
       <button class="tab" data-tab="edit-letter">Editar carta</button>
       <button class="tab" data-tab="edit-disclaimer">Editar disclaimer</button>
+      <button class="tab" data-tab="edit-farewell">Editar despedida</button>
       <button class="tab" data-tab="logs">Logs</button>
       <button class="tab" data-tab="settings">Configuración</button>
     </div>
@@ -666,15 +698,10 @@ input[type=file]{display:none}
         <button onclick="addHR('letter-editor')" title="Separador">&#8213;</button>
         <button onclick="addLink('letter-editor')" title="Enlace">&#128279;</button>
         <button onclick="addImage('letter-editor')" title="Imagen">&#128247;</button>
-        <select title="Tamaño de texto" onchange="applyFontSize(this,'letter-editor')">
-          <option value="">Tamaño</option>
-          <option value="0.8em">Muy pequeño</option>
-          <option value="0.9em">Pequeño</option>
-          <option value="1em">Normal</option>
-          <option value="1.15em">Grande</option>
-          <option value="1.3em">Muy grande</option>
-          <option value="1.6em">Enorme</option>
-        </select>
+        <span class="toolbar-sep"></span>
+        <button class="size-btn" onclick="bumpFontSize('letter-editor',-1)" title="Hacer más pequeño">A&minus;</button>
+        <button class="size-btn" onclick="bumpFontSize('letter-editor',1)" title="Hacer más grande">A+</button>
+        <button class="size-btn" onclick="bumpFontSize('letter-editor',0)" title="Tamaño normal" style="font-size:.78rem">Normal</button>
       </div>
       <input type="file" id="img-letter-editor" accept="image/*" onchange="insertImage(this,'letter-editor')">
       <div id="letter-editor" class="richtext" contenteditable="true" style="min-height:420px;max-height:65vh"></div>
@@ -684,30 +711,51 @@ input[type=file]{display:none}
       </div>
     </div>
 
-    <!-- Panel: edit disclaimer -->
+    <!-- Panel: edit disclaimer (constrained to the width the user will see) -->
     <div id="panel-edit-disclaimer" class="panel hidden">
-      <div class="toolbar">
-        <button onclick="execCmd('bold','disc-editor')" title="Negrita"><b>B</b></button>
-        <button onclick="execCmd('italic','disc-editor')" title="Cursiva"><i>I</i></button>
-        <button onclick="execCmd('underline','disc-editor')" title="Subrayado"><u>U</u></button>
-        <button onclick="addHeading('disc-editor')" title="Título">H</button>
-        <button onclick="addLink('disc-editor')" title="Enlace">&#128279;</button>
-        <button onclick="addImage('disc-editor')" title="Imagen">&#128247;</button>
-        <select title="Tamaño de texto" onchange="applyFontSize(this,'disc-editor')">
-          <option value="">Tamaño</option>
-          <option value="0.8em">Muy pequeño</option>
-          <option value="0.9em">Pequeño</option>
-          <option value="1em">Normal</option>
-          <option value="1.15em">Grande</option>
-          <option value="1.3em">Muy grande</option>
-          <option value="1.6em">Enorme</option>
-        </select>
+      <div style="max-width:680px;margin:0 auto">
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:10px">El editor tiene el mismo ancho que verá el usuario.</p>
+        <div class="toolbar">
+          <button onclick="execCmd('bold','disc-editor')" title="Negrita"><b>B</b></button>
+          <button onclick="execCmd('italic','disc-editor')" title="Cursiva"><i>I</i></button>
+          <button onclick="execCmd('underline','disc-editor')" title="Subrayado"><u>U</u></button>
+          <button onclick="addHeading('disc-editor')" title="Título">H</button>
+          <button onclick="addLink('disc-editor')" title="Enlace">&#128279;</button>
+          <button onclick="addImage('disc-editor')" title="Imagen">&#128247;</button>
+          <span class="toolbar-sep"></span>
+          <button class="size-btn" onclick="bumpFontSize('disc-editor',-1)" title="Hacer más pequeño">A&minus;</button>
+          <button class="size-btn" onclick="bumpFontSize('disc-editor',1)" title="Hacer más grande">A+</button>
+          <button class="size-btn" onclick="bumpFontSize('disc-editor',0)" title="Tamaño normal" style="font-size:.78rem">Normal</button>
+        </div>
+        <input type="file" id="img-disc-editor" accept="image/*" onchange="insertImage(this,'disc-editor')">
+        <div id="disc-editor" class="richtext" contenteditable="true"></div>
+        <div style="margin-top:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <button class="btn btn-sm" onclick="saveDisclaimer()">Guardar disclaimer</button>
+          <span id="disc-save-status" class="status"></span>
+        </div>
       </div>
-      <input type="file" id="img-disc-editor" accept="image/*" onchange="insertImage(this,'disc-editor')">
-      <div id="disc-editor" class="richtext" contenteditable="true"></div>
-      <div style="margin-top:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <button class="btn btn-sm" onclick="saveDisclaimer()">Guardar disclaimer</button>
-        <span id="disc-save-status" class="status"></span>
+    </div>
+
+    <!-- Panel: edit farewell (message shown after the user cancels) -->
+    <div id="panel-edit-farewell" class="panel hidden">
+      <div style="max-width:520px;margin:0 auto">
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:10px">Mensaje que verá el usuario si pulsa &ldquo;Cancelar&rdquo; en el disclaimer.</p>
+        <div class="toolbar">
+          <button onclick="execCmd('bold','farewell-editor')" title="Negrita"><b>B</b></button>
+          <button onclick="execCmd('italic','farewell-editor')" title="Cursiva"><i>I</i></button>
+          <button onclick="execCmd('underline','farewell-editor')" title="Subrayado"><u>U</u></button>
+          <button onclick="addHeading('farewell-editor')" title="Título">H</button>
+          <button onclick="addLink('farewell-editor')" title="Enlace">&#128279;</button>
+          <span class="toolbar-sep"></span>
+          <button class="size-btn" onclick="bumpFontSize('farewell-editor',-1)" title="Hacer más pequeño">A&minus;</button>
+          <button class="size-btn" onclick="bumpFontSize('farewell-editor',1)" title="Hacer más grande">A+</button>
+          <button class="size-btn" onclick="bumpFontSize('farewell-editor',0)" title="Tamaño normal" style="font-size:.78rem">Normal</button>
+        </div>
+        <div id="farewell-editor" class="richtext" contenteditable="true" style="min-height:160px;max-height:40vh"></div>
+        <div style="margin-top:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <button class="btn btn-sm" onclick="saveFarewell()">Guardar despedida</button>
+          <span id="farewell-save-status" class="status"></span>
+        </div>
       </div>
     </div>
 
@@ -738,11 +786,11 @@ input[type=file]{display:none}
       </div>
       <div class="field">
         <label>Alineación del texto de la carta</label>
-        <select id="text-align-select" style="width:100%;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.15);color:#fff;font-size:.95rem;outline:none">
-          <option value="justify">Justificado</option>
-          <option value="center">Centrado</option>
-          <option value="left">Izquierda</option>
-        </select>
+        <div class="segmented" id="text-align-seg">
+          <button type="button" class="segmented-btn" data-value="justify">Justificado</button>
+          <button type="button" class="segmented-btn" data-value="center">Centrado</button>
+          <button type="button" class="segmented-btn" data-value="left">Izquierda</button>
+        </div>
         <div style="font-size:.78rem;color:var(--muted);margin-top:6px">Cambia cómo se ve el texto en la carta (vista de usuario y vista previa).</div>
       </div>
       <div class="toggle-row danger-section">
@@ -1021,6 +1069,8 @@ function onDisclaimerRead(){
 }
 function onDisclaimerCancel(){
   appendLog("cancel","Canceló la lectura");
+  var fw = document.getElementById("farewell-content");
+  if(fw) fw.innerHTML = (data && data.farewell) || "<p>Respeto tu decisión. Puedes volver cuando quieras leerla, estará aquí esperando.</p>";
   show("farewell-screen");
 }
 
@@ -1145,6 +1195,7 @@ function throttle(fn, wait){
 function renderAdmin(){
   document.getElementById("letter-editor").innerHTML = data.letter || "";
   document.getElementById("disc-editor").innerHTML = data.disclaimer || "";
+  document.getElementById("farewell-editor").innerHTML = data.farewell || "<p>Respeto tu decisión. Puedes volver cuando quieras leerla, estará aquí esperando.</p>";
   var adminLetter = document.getElementById("admin-letter-content");
   adminLetter.innerHTML = data.letter || "";
   adminLetter.style.textAlign = data.textAlign || "justify";
@@ -1154,7 +1205,7 @@ function renderAdmin(){
   document.getElementById("admin-progress-label").textContent = Math.round(maxP)+"%";
   document.getElementById("admin-max-progress").textContent = Math.round(maxP)+"%";
   document.getElementById("user-code-input").value = data.userCode || "";
-  document.getElementById("text-align-select").value = data.textAlign || "justify";
+  setSegmentedValue("text-align-seg", data.textAlign || "justify");
   document.getElementById("page-disabled-toggle").checked = !!data.pageDisabled;
   renderLogs();
 }
@@ -1168,30 +1219,49 @@ function addParagraph(id){ focusEditor(id); document.execCommand("formatBlock",f
 function addHR(id){ focusEditor(id); document.execCommand("insertHorizontalRule",false,null); }
 function addLink(id){ var u = prompt("URL del enlace:"); if(u){ focusEditor(id); document.execCommand("createLink",false,u); } }
 function addImage(id){ activeEditor=id; document.getElementById("img-"+id).click(); }
-/* Wrap the current selection in <span style="font-size:X"> so the user can
-   resize chunks of text to whatever size they want. If nothing is selected
-   (or selection is outside the editor), do nothing. */
-function applyFontSize(sel, editorId){
-  var size = sel.value;
-  sel.selectedIndex = 0; // reset to "Tamaño" label
-  if(!size) return;
+/* Font sizes in rem, so they're ABSOLUTE (not relative to parent). Index 2
+   (1rem) is "Normal". bumpFontSize(id, delta) reads the current size of the
+   selection, picks the next preset up or down, and wraps the selection via
+   document.execCommand('insertHTML') — going through execCommand means the
+   change lands on the browser's native undo stack, so Ctrl+Z works. */
+var FONT_SIZES = [0.75, 0.85, 1, 1.15, 1.3, 1.5, 1.8];
+var FONT_SIZE_NORMAL_IDX = 2;
+function detectSizeIdx(node){
+  while(node && node.nodeType !== 1) node = node.parentNode;
+  if(!node) return FONT_SIZE_NORMAL_IDX;
+  var fsPx = parseFloat(window.getComputedStyle(node).fontSize);
+  var baseFs = parseFloat(window.getComputedStyle(document.documentElement).fontSize) || 16;
+  var fsRem = fsPx / baseFs;
+  var closest = FONT_SIZE_NORMAL_IDX, minDiff = Infinity;
+  for(var i=0;i<FONT_SIZES.length;i++){
+    var d = Math.abs(FONT_SIZES[i]-fsRem);
+    if(d < minDiff){ minDiff = d; closest = i; }
+  }
+  return closest;
+}
+function bumpFontSize(editorId, delta){
   var editor = document.getElementById(editorId);
   if(!editor) return;
-  var selection = window.getSelection();
-  if(!selection || selection.rangeCount===0) return;
-  var range = selection.getRangeAt(0);
-  // Make sure the selection is inside this editor
-  if(!editor.contains(range.commonAncestorContainer)){ editor.focus(); return; }
-  if(range.collapsed) return; // no text selected
-  var span = document.createElement("span");
-  span.style.fontSize = size;
-  try{
-    span.appendChild(range.extractContents());
-    range.insertNode(span);
-    // Re-select the inserted span so the user can see what changed
-    selection.removeAllRanges();
-    var r = document.createRange(); r.selectNodeContents(span); selection.addRange(r);
-  }catch(e){ console.warn("applyFontSize failed",e); }
+  editor.focus();
+  var sel = window.getSelection();
+  if(!sel || sel.rangeCount===0) return;
+  var range = sel.getRangeAt(0);
+  if(!editor.contains(range.commonAncestorContainer)) return;
+  if(range.collapsed) return; // no selection -> nothing to resize
+  var idx;
+  if(delta === 0){
+    idx = FONT_SIZE_NORMAL_IDX;
+  } else {
+    var current = detectSizeIdx(range.startContainer);
+    idx = Math.max(0, Math.min(FONT_SIZES.length-1, current + delta));
+  }
+  var target = FONT_SIZES[idx] + "rem";
+  // Keep inline formatting (bold/italic/etc.) by cloning the selected HTML
+  var frag = range.cloneContents();
+  var tmp = document.createElement("div"); tmp.appendChild(frag);
+  var html = '<span style="font-size:'+target+'">'+tmp.innerHTML+'</span>';
+  // execCommand -> native undo/redo support (Ctrl+Z works)
+  document.execCommand("insertHTML", false, html);
 }
 function compressImage(file,maxW,quality,cb){
   var rd = new FileReader();
@@ -1293,6 +1363,14 @@ function saveDisclaimer(){
     } else statusErr(st, r.message||"Error");
   }).catch(function(){ statusErr(st,"Sin conexión"); });
 }
+function saveFarewell(){
+  var st = document.getElementById("farewell-save-status"); statusLoading(st);
+  data.farewell = document.getElementById("farewell-editor").innerHTML;
+  saveData(data).then(function(r){
+    if(r.content) statusOk(st);
+    else statusErr(st, r.message||"Error");
+  }).catch(function(){ statusErr(st,"Sin conexión"); });
+}
 function saveSettings(){
   var st = document.getElementById("settings-status");
   var newCode = document.getElementById("user-code-input").value.trim();
@@ -1301,7 +1379,7 @@ function saveSettings(){
   var oldCode = data.userCode;
   data.userCode = newCode;
   data.pageDisabled = document.getElementById("page-disabled-toggle").checked;
-  data.textAlign = document.getElementById("text-align-select").value || "justify";
+  data.textAlign = getSegmentedValue("text-align-seg") || "justify";
   // Live-update the admin preview so the admin can compare center vs justify
   // without switching tabs.
   var adminLetter = document.getElementById("admin-letter-content");
@@ -1423,13 +1501,34 @@ document.addEventListener("click", function(e){
   if(name==="view-disclaimer") document.getElementById("admin-disclaimer-content").innerHTML = data.disclaimer||"";
 });
 
-/* Live-preview the alignment in the admin when the admin picks a new option
-   in the settings tab — the change isn't persisted until "Guardar", but the
-   "Ver carta" preview updates instantly so the admin can compare. */
-document.addEventListener("change", function(e){
-  if(e.target && e.target.id === "text-align-select"){
+/* Segmented pill helpers */
+function getSegmentedValue(groupId){
+  var g = document.getElementById(groupId);
+  if(!g) return null;
+  var active = g.querySelector(".segmented-btn.active");
+  return active ? active.getAttribute("data-value") : null;
+}
+function setSegmentedValue(groupId, value){
+  var g = document.getElementById(groupId);
+  if(!g) return;
+  var btns = g.querySelectorAll(".segmented-btn");
+  for(var i=0;i<btns.length;i++){
+    btns[i].classList.toggle("active", btns[i].getAttribute("data-value") === value);
+  }
+}
+/* Clicking a segmented button selects it + live-previews the alignment in
+   the admin "Ver carta" tab so the admin can compare center vs justify
+   instantly (the value isn't persisted until "Guardar configuración"). */
+document.addEventListener("click", function(e){
+  var btn = e.target && e.target.closest && e.target.closest(".segmented-btn");
+  if(!btn) return;
+  var group = btn.parentElement;
+  var siblings = group.querySelectorAll(".segmented-btn");
+  for(var i=0;i<siblings.length;i++) siblings[i].classList.remove("active");
+  btn.classList.add("active");
+  if(group.id === "text-align-seg"){
     var al = document.getElementById("admin-letter-content");
-    if(al) al.style.textAlign = e.target.value || "justify";
+    if(al) al.style.textAlign = btn.getAttribute("data-value") || "justify";
   }
 });
 

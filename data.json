@@ -965,6 +965,15 @@
       "role": "admin",
       "ip": "88.1.48.71",
       "fp": "c86c3813"
+    },
+    {
+      "ts": "21/4/2026, 23:28:19",
+      "tsISO": "2026-04-21T21:28:19.873Z",
+      "type": "login",
+      "detail": "user",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "7b71fb52"
     }
   ],
   "textAlign": "justify",

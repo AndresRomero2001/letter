@@ -128,6 +128,15 @@
       "role": "admin",
       "ip": "88.1.48.71",
       "fp": "c86c3813"
+    },
+    {
+      "ts": "21/4/2026, 21:01:57",
+      "tsISO": "2026-04-21T19:01:57.079Z",
+      "type": "login",
+      "detail": "admin",
+      "role": "admin",
+      "ip": "88.1.48.71",
+      "fp": "56c0cc46"
     }
   ],
   "textAlign": "justify",

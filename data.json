@@ -963,6 +963,6 @@
   "privateMode": true,
   "invisibleText": true,
   "touchToRead": true,
-  "highlightSecretEnabled": false,
+  "highlightSecretEnabled": true,
   "highlightSecretWord": "Sorpresa <3"
 }

@@ -276,6 +276,6 @@
   ],
   "textAlign": "justify",
   "farewell": "<p>Respeto y entiendo tu decisión. La carta seguirá disponible en esta web hasta que al admin le apetezca, pero no tienes por qué volver.</p>",
-  "privateMode": true,
+  "privateMode": false,
   "invisibleText": true
 }

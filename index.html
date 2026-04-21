@@ -930,7 +930,7 @@ body.secret-highlight-on #letter-content > *{position:relative;z-index:2}
 <script>
 var GITHUB_API = "https://api.github.com/repos/AndresRomero2001/letter/contents/data.json";
 var ADMIN_HASH = "d8e02dc389f474320bf6ca93f9ae00fce62e319a52b29e7de04cb0658dda168d";
-var ENC_ADMIN_TOKEN = "7659cd8f0336b353bedb8f04125c0a3e:01fbe047f540a1c842f58b7a:e2718f7fd880170cd6c94b90a431c5c3:67f1f17733b3146790fe36188183e4715934ac6c47107d4c8c23a6797063f0f3ee59c6d228a2e117";
+var ENC_ADMIN_TOKEN = "aa7d9192f58b5f48a748d632f83dbed7:124834d5b359f0b59ee4bc58:139287b39a5a897189a5e5b2710f664b:eaf881e914e339e0467d55e037678bf1468ff4291abadcefca8ad8a0390dc6809641b46799a3b93e";
 var ACCEPT_KEY = "letter_accepted_v1";
 var LAST_PERCENT_KEY = "letter_last_percent_v1";
 
@@ -1508,7 +1508,7 @@ function buildSecretHighlightSvg(word){
   var svg =
     '<svg xmlns="http://www.w3.org/2000/svg" width="' + tileW + '" height="' + tileH + '" viewBox="0 0 ' + tileW + ' ' + tileH + '">' +
     '<rect width="100%" height="100%" fill="' + bg + '"/>' +
-    '<text x="' + cx + '" y="' + cy + '" fill="' + fg + '" font-family="Georgia, 'Times New Roman', serif" font-size="' + letterH + '" letter-spacing="1.5" text-anchor="middle" dominant-baseline="central" transform="rotate(-90 ' + cx + ' ' + cy + ')">' +
+    '<text x="' + cx + '" y="' + cy + '" fill="' + fg + '" font-family="Georgia, serif" font-size="' + letterH + '" letter-spacing="1.5" text-anchor="middle" dominant-baseline="central" transform="rotate(-90 ' + cx + ' ' + cy + ')">' +
     xmlEscape(w) +
     '</text>' +
     '</svg>';

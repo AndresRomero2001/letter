@@ -1622,7 +1622,7 @@ function buildSecretHighlightSvg(word){
   var svg =
     '<svg xmlns="http://www.w3.org/2000/svg" width="' + tileW + '" height="' + tileH + '" viewBox="0 0 ' + tileW + ' ' + tileH + '">' +
     '<rect width="100%" height="100%" fill="' + bg + '"/>' +
-    '<text x="' + cx + '" y="' + cy + '" fill="' + fg + '" font-family="Georgia, \'Times New Roman\', serif" font-size="' + letterH + '" letter-spacing="1.5" text-anchor="middle" dominant-baseline="central" transform="rotate(-90 ' + cx + ' ' + cy + ')">' +
+    '<text x="' + cx + '" y="' + cy + '" fill="' + fg + '" font-family="Georgia, serif" font-size="' + letterH + '" letter-spacing="1.5" text-anchor="middle" dominant-baseline="central" transform="rotate(-90 ' + cx + ' ' + cy + ')">' +
     xmlEscape(w) +
     '</text>' +
     '</svg>';

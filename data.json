@@ -6,8 +6,8 @@
   "pageDisabled": false,
   "progress": {
     "maxPercent": 100,
-    "lastPercent": 3.8399385552811776,
-    "lastUpdated": "2026-04-21T21:17:12.022Z",
+    "lastPercent": 0,
+    "lastUpdated": "2026-04-21T21:18:39.704Z",
     "finishedLogged": true,
     "lastLoggedPercent": 45.86827205618864
   },
@@ -400,92 +400,17 @@
       "fp": "4bfd9484"
     },
     {
-      "ts": "21/4/2026, 23:13:19",
-      "tsISO": "2026-04-21T21:13:19.987Z",
-      "type": "login",
-      "detail": "user",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "460450d9"
-    },
-    {
-      "ts": "21/4/2026, 23:13:20",
-      "tsISO": "2026-04-21T21:13:20.791Z",
-      "type": "disclaimer_shown",
-      "detail": "",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "460450d9"
-    },
-    {
-      "ts": "21/4/2026, 23:13:26",
-      "tsISO": "2026-04-21T21:13:26.241Z",
-      "type": "read",
-      "detail": "Aceptó leer la carta",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "d5dd9c81"
-    },
-    {
-      "ts": "21/4/2026, 23:13:26",
-      "tsISO": "2026-04-21T21:13:26.243Z",
+      "ts": "21/4/2026, 23:18:39",
+      "tsISO": "2026-04-21T21:18:39.746Z",
       "type": "capture",
-      "detail": "session-start @0%",
+      "detail": "focus-loss:visibilitychange",
       "role": "user",
       "ip": "88.1.48.71",
-      "fp": "d5dd9c81"
-    },
-    {
-      "ts": "21/4/2026, 23:13:45",
-      "tsISO": "2026-04-21T21:13:45.318Z",
-      "type": "capture",
-      "detail": "focus-loss:window-blur @0%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "d5dd9c81"
-    },
-    {
-      "ts": "21/4/2026, 23:13:50",
-      "tsISO": "2026-04-21T21:13:50.305Z",
-      "type": "login",
-      "detail": "admin",
-      "role": "admin",
-      "ip": "88.1.48.71",
-      "fp": "c86c3813"
-    },
-    {
-      "ts": "21/4/2026, 23:15:34",
-      "tsISO": "2026-04-21T21:15:34.069Z",
-      "type": "login",
-      "detail": "admin",
-      "role": "admin",
-      "ip": "88.1.48.71",
-      "fp": "c86c3813"
-    },
-    {
-      "ts": "21/4/2026, 23:16:26",
-      "tsISO": "2026-04-21T21:16:26.767Z",
-      "type": "login",
-      "detail": "user",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "d5dd9c81"
-    },
-    {
-      "ts": "21/4/2026, 23:18:21",
-      "tsISO": "2026-04-21T21:18:21.274Z",
-      "type": "login",
-      "detail": "admin",
-      "role": "admin",
-      "ip": "88.1.48.71",
-      "fp": "c86c3813"
+      "fp": "4bfd9484"
     }
   ],
   "textAlign": "justify",
   "farewell": "<p>Respeto y entiendo tu decisión. La carta seguirá disponible en esta web hasta que al admin le apetezca, pero no tienes por qué volver.</p>",
-  "privateMode": false,
-  "invisibleText": true,
-  "touchToRead": false,
-  "highlightSecretEnabled": false,
-  "highlightSecretWord": "Sorpresa <3"
+  "privateMode": true,
+  "invisibleText": true
 }

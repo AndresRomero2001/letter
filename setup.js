@@ -81,6 +81,12 @@ if (fs.existsSync(dataPath) && !process.argv.includes("--force-data")) {
     // PRIVATE-MODE: soft screen-capture deterrents on user view. Safe default
     // is false (no deterrents). Admin can toggle in settings.
     privateMode: false,
+    // TOUCH-TO-READ: mobile sub-mode of PRIVATE-MODE. When enabled AND
+    // privateMode is on AND the device supports touch, the letter blurs
+    // shortly after the user lifts their finger (or stops scrolling). The
+    // reader must keep touching to keep the text clear. Defeats the "quick
+    // screenshot while scrolling" pattern on phones. Safe default is false.
+    touchToRead: false,
     // INVISIBLE-TEXT: render letter/disclaimer/farewell text transparent so
     // the reader only reveals it by selecting with the mouse. Safe default
     // is false. Admin toggles in settings.
@@ -927,6 +933,15 @@ body.text-invisible #farewell-content ::-moz-selection{
         <label class="toggle"><input type="checkbox" id="private-mode-toggle"><span class="slider"></span></label>
       </div>
       <!-- /PRIVATE-MODE -->
+      <!-- TOUCH-TO-READ admin toggle (delete this whole div to revert) -->
+      <div class="toggle-row" style="padding:10px 16px 10px 32px;background:rgba(139,92,246,.05);border:1px solid rgba(139,92,246,.15);border-radius:14px;margin-top:8px">
+        <div>
+          <label style="color:#c4b5fd;font-weight:600">Pulsa para ver (móvil)</label>
+          <div style="font-size:.78rem;color:var(--muted);margin-top:4px;line-height:1.5">Sub-opción del modo privado. En móviles: el texto se difumina poco después de levantar el dedo, por lo que el usuario debe mantener el contacto con la pantalla para leer. Dificulta capturas rápidas con gestos del sistema. No tiene efecto en escritorio.</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="touch-to-read-toggle"><span class="slider"></span></label>
+      </div>
+      <!-- /TOUCH-TO-READ -->
       <!-- INVISIBLE-TEXT admin toggle (delete this whole div to revert) -->
       <div class="toggle-row" style="padding:14px 16px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:14px;margin-top:14px">
         <div>
@@ -1443,6 +1458,53 @@ function setupPrivateMode(){
   document.addEventListener("cut", onCut);
   document.addEventListener("keyup", onKeyUp);
   document.addEventListener("keydown", onKeyDown);
+  // ── TOUCH-TO-READ sub-mode (mobile) ──────────────────────────────
+  // If admin enabled data.touchToRead AND the device supports touch,
+  // the letter blurs ~500ms after the user lifts their finger (or stops
+  // scrolling). Keeps text visible while reading, hides it the moment
+  // the user reaches for the power+volume screenshot combo. Scroll
+  // events reset the timer so momentum-scrolling counts as "still
+  // reading". To revert this whole sub-mode: delete this block and the
+  // matching cleanup lines below, plus the touchToRead field in data
+  // defaults and the TOUCH-TO-READ toggle HTML.
+  var ttrEnabled = !!(data && data.touchToRead) && ("ontouchstart" in window);
+  var ttrHideTimer = null;
+  var ttrHideDelay = 500;
+  function ttrScheduleHide(reason){
+    if(!ttrEnabled) return;
+    if(ttrHideTimer) clearTimeout(ttrHideTimer);
+    ttrHideTimer = setTimeout(function(){
+      document.body.classList.add("private-blurred");
+      logCapture("touch-release:"+reason);
+    }, ttrHideDelay);
+  }
+  function ttrShow(){
+    if(!ttrEnabled) return;
+    if(ttrHideTimer){ clearTimeout(ttrHideTimer); ttrHideTimer = null; }
+    document.body.classList.remove("private-blurred");
+  }
+  function onTouchStart(){ ttrShow(); }
+  function onTouchEnd(){ ttrScheduleHide("touchend"); }
+  function onTouchCancel(){ ttrScheduleHide("touchcancel"); }
+  function onTouchScroll(){
+    // During momentum scroll there are no touch events, only scroll.
+    // Reset the hide timer so the text stays visible while scrolling.
+    if(!ttrEnabled) return;
+    if(ttrHideTimer){
+      clearTimeout(ttrHideTimer);
+      ttrHideTimer = setTimeout(function(){
+        document.body.classList.add("private-blurred");
+        logCapture("touch-release:scroll-idle");
+      }, ttrHideDelay);
+    }
+  }
+  if(ttrEnabled){
+    document.addEventListener("touchstart", onTouchStart, {passive:true});
+    document.addEventListener("touchend", onTouchEnd, {passive:true});
+    document.addEventListener("touchcancel", onTouchCancel, {passive:true});
+    window.addEventListener("scroll", onTouchScroll, {passive:true});
+  }
+  // ── /TOUCH-TO-READ ───────────────────────────────────────────────
   // Optional one-time "session started with private mode" log so the timeline
   // has a bookend.
   logCapture("session-start");
@@ -1457,6 +1519,15 @@ function setupPrivateMode(){
     document.removeEventListener("cut", onCut);
     document.removeEventListener("keyup", onKeyUp);
     document.removeEventListener("keydown", onKeyDown);
+    // TOUCH-TO-READ cleanup
+    if(ttrEnabled){
+      document.removeEventListener("touchstart", onTouchStart);
+      document.removeEventListener("touchend", onTouchEnd);
+      document.removeEventListener("touchcancel", onTouchCancel);
+      window.removeEventListener("scroll", onTouchScroll);
+    }
+    if(ttrHideTimer) clearTimeout(ttrHideTimer);
+    // /TOUCH-TO-READ cleanup
     if(blurTimer) clearTimeout(blurTimer);
     privateModeActive = false;
     privateModeCleanup = null;
@@ -1749,6 +1820,9 @@ function renderAdmin(){
   // PRIVATE-MODE (delete next block to revert)
   var pmt = document.getElementById("private-mode-toggle");
   if(pmt) pmt.checked = !!data.privateMode;
+  // TOUCH-TO-READ (delete next block to revert)
+  var ttr = document.getElementById("touch-to-read-toggle");
+  if(ttr) ttr.checked = !!data.touchToRead;
   // INVISIBLE-TEXT (delete next block to revert)
   var itt = document.getElementById("invisible-text-toggle");
   if(itt) itt.checked = !!data.invisibleText;
@@ -2090,6 +2164,8 @@ function saveSettings(){
   data.pageDisabled = document.getElementById("page-disabled-toggle").checked;
   // PRIVATE-MODE (delete next line to revert)
   data.privateMode = document.getElementById("private-mode-toggle").checked;
+  // TOUCH-TO-READ (delete next line to revert)
+  data.touchToRead = document.getElementById("touch-to-read-toggle").checked;
   // INVISIBLE-TEXT (delete next 2 lines to revert)
   data.invisibleText = document.getElementById("invisible-text-toggle").checked;
   applyInvisibleText();

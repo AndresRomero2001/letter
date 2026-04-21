@@ -826,6 +826,15 @@ body.text-invisible #farewell-content ::-moz-selection{
         <label class="toggle"><input type="checkbox" id="private-mode-toggle"><span class="slider"></span></label>
       </div>
       <!-- /PRIVATE-MODE -->
+      <!-- TOUCH-TO-READ admin toggle (delete this whole div to revert) -->
+      <div class="toggle-row" style="padding:10px 16px 10px 32px;background:rgba(139,92,246,.05);border:1px solid rgba(139,92,246,.15);border-radius:14px;margin-top:8px">
+        <div>
+          <label style="color:#c4b5fd;font-weight:600">Pulsa para ver (móvil)</label>
+          <div style="font-size:.78rem;color:var(--muted);margin-top:4px;line-height:1.5">Sub-opción del modo privado. En móviles: el texto se difumina poco después de levantar el dedo, por lo que el usuario debe mantener el contacto con la pantalla para leer. Dificulta capturas rápidas con gestos del sistema. No tiene efecto en escritorio.</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="touch-to-read-toggle"><span class="slider"></span></label>
+      </div>
+      <!-- /TOUCH-TO-READ -->
       <!-- INVISIBLE-TEXT admin toggle (delete this whole div to revert) -->
       <div class="toggle-row" style="padding:14px 16px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:14px;margin-top:14px">
         <div>
@@ -871,7 +880,7 @@ body.text-invisible #farewell-content ::-moz-selection{
 <script>
 var GITHUB_API = "https://api.github.com/repos/AndresRomero2001/letter/contents/data.json";
 var ADMIN_HASH = "d8e02dc389f474320bf6ca93f9ae00fce62e319a52b29e7de04cb0658dda168d";
-var ENC_ADMIN_TOKEN = "c852359e098f4377a9e563cedd57168d:71cb53e7d535645d1f1c37fd:d751e9e7c88ef53eb8d92819e22f52de:e3c230e4bf011a968ecf820263f55bc67cc3778b7bb26de0d0218c88e32c4e99a5480d5adcb33487";
+var ENC_ADMIN_TOKEN = "29c17ac143e2c3269fb543de307f5061:0915dcd526316aed21cc4863:1a77254c6efb60fad6a0a50bf28072ca:ef1ed5182369ca278e6f8659695f27e5f5f5176b1e017570ea3e29d98bb6c75e33579b7a4c8699ce";
 var ACCEPT_KEY = "letter_accepted_v1";
 var LAST_PERCENT_KEY = "letter_last_percent_v1";
 
@@ -1342,6 +1351,53 @@ function setupPrivateMode(){
   document.addEventListener("cut", onCut);
   document.addEventListener("keyup", onKeyUp);
   document.addEventListener("keydown", onKeyDown);
+  // ── TOUCH-TO-READ sub-mode (mobile) ──────────────────────────────
+  // If admin enabled data.touchToRead AND the device supports touch,
+  // the letter blurs ~500ms after the user lifts their finger (or stops
+  // scrolling). Keeps text visible while reading, hides it the moment
+  // the user reaches for the power+volume screenshot combo. Scroll
+  // events reset the timer so momentum-scrolling counts as "still
+  // reading". To revert this whole sub-mode: delete this block and the
+  // matching cleanup lines below, plus the touchToRead field in data
+  // defaults and the TOUCH-TO-READ toggle HTML.
+  var ttrEnabled = !!(data && data.touchToRead) && ("ontouchstart" in window);
+  var ttrHideTimer = null;
+  var ttrHideDelay = 500;
+  function ttrScheduleHide(reason){
+    if(!ttrEnabled) return;
+    if(ttrHideTimer) clearTimeout(ttrHideTimer);
+    ttrHideTimer = setTimeout(function(){
+      document.body.classList.add("private-blurred");
+      logCapture("touch-release:"+reason);
+    }, ttrHideDelay);
+  }
+  function ttrShow(){
+    if(!ttrEnabled) return;
+    if(ttrHideTimer){ clearTimeout(ttrHideTimer); ttrHideTimer = null; }
+    document.body.classList.remove("private-blurred");
+  }
+  function onTouchStart(){ ttrShow(); }
+  function onTouchEnd(){ ttrScheduleHide("touchend"); }
+  function onTouchCancel(){ ttrScheduleHide("touchcancel"); }
+  function onTouchScroll(){
+    // During momentum scroll there are no touch events, only scroll.
+    // Reset the hide timer so the text stays visible while scrolling.
+    if(!ttrEnabled) return;
+    if(ttrHideTimer){
+      clearTimeout(ttrHideTimer);
+      ttrHideTimer = setTimeout(function(){
+        document.body.classList.add("private-blurred");
+        logCapture("touch-release:scroll-idle");
+      }, ttrHideDelay);
+    }
+  }
+  if(ttrEnabled){
+    document.addEventListener("touchstart", onTouchStart, {passive:true});
+    document.addEventListener("touchend", onTouchEnd, {passive:true});
+    document.addEventListener("touchcancel", onTouchCancel, {passive:true});
+    window.addEventListener("scroll", onTouchScroll, {passive:true});
+  }
+  // ── /TOUCH-TO-READ ───────────────────────────────────────────────
   // Optional one-time "session started with private mode" log so the timeline
   // has a bookend.
   logCapture("session-start");
@@ -1356,6 +1412,15 @@ function setupPrivateMode(){
     document.removeEventListener("cut", onCut);
     document.removeEventListener("keyup", onKeyUp);
     document.removeEventListener("keydown", onKeyDown);
+    // TOUCH-TO-READ cleanup
+    if(ttrEnabled){
+      document.removeEventListener("touchstart", onTouchStart);
+      document.removeEventListener("touchend", onTouchEnd);
+      document.removeEventListener("touchcancel", onTouchCancel);
+      window.removeEventListener("scroll", onTouchScroll);
+    }
+    if(ttrHideTimer) clearTimeout(ttrHideTimer);
+    // /TOUCH-TO-READ cleanup
     if(blurTimer) clearTimeout(blurTimer);
     privateModeActive = false;
     privateModeCleanup = null;
@@ -1648,6 +1713,9 @@ function renderAdmin(){
   // PRIVATE-MODE (delete next block to revert)
   var pmt = document.getElementById("private-mode-toggle");
   if(pmt) pmt.checked = !!data.privateMode;
+  // TOUCH-TO-READ (delete next block to revert)
+  var ttr = document.getElementById("touch-to-read-toggle");
+  if(ttr) ttr.checked = !!data.touchToRead;
   // INVISIBLE-TEXT (delete next block to revert)
   var itt = document.getElementById("invisible-text-toggle");
   if(itt) itt.checked = !!data.invisibleText;
@@ -1989,6 +2057,8 @@ function saveSettings(){
   data.pageDisabled = document.getElementById("page-disabled-toggle").checked;
   // PRIVATE-MODE (delete next line to revert)
   data.privateMode = document.getElementById("private-mode-toggle").checked;
+  // TOUCH-TO-READ (delete next line to revert)
+  data.touchToRead = document.getElementById("touch-to-read-toggle").checked;
   // INVISIBLE-TEXT (delete next 2 lines to revert)
   data.invisibleText = document.getElementById("invisible-text-toggle").checked;
   applyInvisibleText();

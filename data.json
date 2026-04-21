@@ -416,6 +416,24 @@
       "role": "user",
       "ip": "88.1.48.71",
       "fp": "460450d9"
+    },
+    {
+      "ts": "21/4/2026, 23:13:26",
+      "tsISO": "2026-04-21T21:13:26.241Z",
+      "type": "read",
+      "detail": "Aceptó leer la carta",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "d5dd9c81"
+    },
+    {
+      "ts": "21/4/2026, 23:13:26",
+      "tsISO": "2026-04-21T21:13:26.243Z",
+      "type": "capture",
+      "detail": "session-start @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "d5dd9c81"
     }
   ],
   "textAlign": "justify",

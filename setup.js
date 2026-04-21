@@ -78,6 +78,9 @@ if (fs.existsSync(dataPath) && !process.argv.includes("--force-data")) {
     farewell: DEFAULT_FAREWELL,
     textAlign: "justify",
     pageDisabled: false,
+    // PRIVATE-MODE: soft screen-capture deterrents on user view. Safe default
+    // is false (no deterrents). Admin can toggle in settings.
+    privateMode: false,
     progress: { maxPercent: 0, lastPercent: 0, lastUpdated: "" },
     logs: []
   };
@@ -530,6 +533,30 @@ input[type=file]{display:none}
 .log-chip.cancel{background:rgba(248,113,113,.2);color:#fca5a5}
 .log-chip.progress{background:rgba(251,191,36,.2);color:#fcd34d}
 .log-chip.finished{background:rgba(236,72,153,.25);color:#f9a8d4}
+/* PRIVATE-MODE capture-attempt log chip */
+.log-chip.capture{background:rgba(217,119,6,.25);color:#fcd34d}
+
+/* ── PRIVATE-MODE deterrents ─────────────────────────────────────────
+   Activated only when <body> has .private-mode (set by setupPrivateMode()
+   in openLetter when data.privateMode is true AND the viewer is the user,
+   not admin). To fully disable at runtime: admin toggles off in settings.
+   To fully remove from code: delete this block, the .log-chip.capture
+   rule above, the setupPrivateMode function, the admin HTML toggle row,
+   the saveSettings field read, the renderAdmin checkbox set, the
+   openLetter call, the "capture" logs-filter button, and the privateMode
+   field in the data.json defaults. All tagged with PRIVATE-MODE. */
+body.private-mode #letter-content,
+body.private-mode .papyrus,
+body.private-mode #disclaimer-content,
+body.private-mode #farewell-content{
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+}
+body.private-mode.private-blurred .papyrus,
+body.private-mode.private-blurred #disclaimer-content,
+body.private-mode.private-blurred #farewell-content{
+  filter:blur(22px);transition:filter .12s ease-out;
+}
+/* ── /PRIVATE-MODE ──────────────────────────────────────────────────── */
 .logs-filter{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .logs-filter button{
   padding:6px 10px;border-radius:8px;border:none;background:rgba(255,255,255,.06);
@@ -793,6 +820,8 @@ input[type=file]{display:none}
           <button class="logs-filter-btn" data-filter="read">Leer</button>
           <button class="logs-filter-btn" data-filter="cancel">Cancelar</button>
           <button class="logs-filter-btn" data-filter="progress">Progreso</button>
+          <!-- PRIVATE-MODE: capture-attempt filter (safe to delete) -->
+          <button class="logs-filter-btn" data-filter="capture">Capturas</button>
         </div>
         <button class="btn btn-sm btn-ghost" onclick="refreshLogs()">&#128260; Actualizar</button>
       </div>
@@ -818,6 +847,15 @@ input[type=file]{display:none}
         </div>
         <div style="font-size:.78rem;color:var(--muted);margin-top:6px">Cambia cómo se ve el texto en la carta (vista de usuario y vista previa).</div>
       </div>
+      <!-- PRIVATE-MODE admin toggle (delete this whole div to revert) -->
+      <div class="toggle-row" style="padding:14px 16px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:14px;margin-top:14px">
+        <div>
+          <label style="color:#c4b5fd;font-weight:600">Modo privado de lectura</label>
+          <div style="font-size:.78rem;color:var(--muted);margin-top:4px;line-height:1.5">Dificulta capturas de pantalla: desactiva clic-derecho, selección de texto y difumina la carta al cambiar de app. No bloquea capturas (imposible en web), pero registra los intentos en el log.</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="private-mode-toggle"><span class="slider"></span></label>
+      </div>
+      <!-- /PRIVATE-MODE -->
       <div class="toggle-row danger-section">
         <div>
           <label style="color:var(--err);font-weight:600">Desactivar página</label>
@@ -1183,6 +1221,120 @@ var dwellPendingMilestone = 0;  // 0 means "at the top / nothing pending"
 var dwellPendingTimer = null;
 var dwellPendingStartTime = 0;
 
+// ── PRIVATE-MODE setup ──────────────────────────────────────────────
+// To fully revert: delete this whole function, the call site in openLetter(),
+// the CSS block tagged PRIVATE-MODE, the admin HTML toggle row tagged
+// PRIVATE-MODE, the saveSettings line that reads #private-mode-toggle, the
+// renderAdmin block that sets it, the "capture" logs-filter button, and the
+// privateMode field in the data.json defaults.
+//
+// What it does (soft deterrents — NOT prevention):
+//  • Disables selection/copy/right-click/long-press on letter content via CSS
+//    (class is set on <body>).
+//  • Blurs the whole papyrus when the tab loses focus or is hidden. This
+//    frustrates screen-capture tools that steal focus (Snipping Tool, OBS
+//    window capture, Android/iOS screenshot UI on some devices), and makes
+//    phone-photographing require putting the tab back in focus first.
+//  • Intercepts PrintScreen on Windows to clear the clipboard (best-effort;
+//    needs focus + clipboard permission, not always granted).
+//  • Logs every attempt so the admin can SEE when capture was tried.
+//
+// None of this prevents OS-level screen recording or photographing the screen.
+// That's a hard limit of the web platform. The admin-facing logs are the
+// point: you'll know when something happened.
+var privateModeActive = false;
+var privateModeCleanup = null;
+function setupPrivateMode(){
+  if(privateModeActive) return;
+  if(isAdmin) return;
+  if(!data || !data.privateMode) return;
+  privateModeActive = true;
+  document.body.classList.add("private-mode");
+  // Throttle logs so a flapping focus (or held-down PrintScreen) doesn't spam
+  // the logs array. One entry per event type per 3 seconds.
+  var lastLogAt = {};
+  function logCapture(detail){
+    var key = detail.split(":")[0] || detail;
+    var now = Date.now();
+    if(lastLogAt[key] && now - lastLogAt[key] < 3000) return;
+    lastLogAt[key] = now;
+    appendLog("capture", detail);
+  }
+  var blurTimer = null;
+  function blurOn(reason){
+    // Defer slightly so the blur flashes BEFORE any capture tool can grab
+    // a frame — most screenshot UIs wait 100-300ms between focus-steal and
+    // capture.
+    if(blurTimer) clearTimeout(blurTimer);
+    document.body.classList.add("private-blurred");
+    logCapture("focus-loss:"+reason);
+  }
+  function blurOff(){
+    // Small delay so a fast refocus doesn't flash the content during what
+    // might be a capture gesture finishing.
+    if(blurTimer) clearTimeout(blurTimer);
+    blurTimer = setTimeout(function(){
+      document.body.classList.remove("private-blurred");
+    }, 120);
+  }
+  function onVisibility(){
+    if(document.visibilityState==="hidden") blurOn("visibilitychange");
+    else blurOff();
+  }
+  function onBlur(){ blurOn("window-blur"); }
+  function onFocus(){ blurOff(); }
+  function onContext(e){ e.preventDefault(); logCapture("context-menu"); }
+  function onCopy(e){ e.preventDefault(); logCapture("copy"); }
+  function onCut(e){ e.preventDefault(); logCapture("cut"); }
+  function onKeyUp(e){
+    // Windows PrintScreen fires keyup (not keydown) because the OS intercepts
+    // keydown. When the tab has focus we can at least clobber the clipboard.
+    if(e.key === "PrintScreen" || e.keyCode === 44){
+      logCapture("printscreen");
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(" ").catch(function(){});
+      }
+    }
+  }
+  function onKeyDown(e){
+    // Ctrl+P (print), Ctrl+S (save page), Ctrl+Shift+S (some screenshot
+    // extensions), Ctrl+C (copy — already blocked by copy event but we log
+    // it here to be explicit). Best-effort, easy to bypass.
+    if((e.ctrlKey||e.metaKey) && (e.key==="p"||e.key==="P")){
+      e.preventDefault(); logCapture("print-shortcut");
+    } else if((e.ctrlKey||e.metaKey) && (e.key==="s"||e.key==="S")){
+      e.preventDefault(); logCapture("save-shortcut");
+    }
+  }
+  document.addEventListener("visibilitychange", onVisibility);
+  window.addEventListener("blur", onBlur);
+  window.addEventListener("focus", onFocus);
+  document.addEventListener("contextmenu", onContext);
+  document.addEventListener("copy", onCopy);
+  document.addEventListener("cut", onCut);
+  document.addEventListener("keyup", onKeyUp);
+  document.addEventListener("keydown", onKeyDown);
+  // Optional one-time "session started with private mode" log so the timeline
+  // has a bookend.
+  logCapture("session-start");
+  privateModeCleanup = function(){
+    document.body.classList.remove("private-mode");
+    document.body.classList.remove("private-blurred");
+    document.removeEventListener("visibilitychange", onVisibility);
+    window.removeEventListener("blur", onBlur);
+    window.removeEventListener("focus", onFocus);
+    document.removeEventListener("contextmenu", onContext);
+    document.removeEventListener("copy", onCopy);
+    document.removeEventListener("cut", onCut);
+    document.removeEventListener("keyup", onKeyUp);
+    document.removeEventListener("keydown", onKeyDown);
+    if(blurTimer) clearTimeout(blurTimer);
+    privateModeActive = false;
+    privateModeCleanup = null;
+  };
+}
+// ── /PRIVATE-MODE setup ─────────────────────────────────────────────
+
 function openLetter(){
   var lc = document.getElementById("letter-content");
   renderRichContent(lc, data.letter || "", data.textAlign || "justify");
@@ -1233,6 +1385,8 @@ function openLetter(){
   show("letter-screen");
   window.scrollTo(0,0);
   attachScrollTracking();
+  // PRIVATE-MODE (delete next line to revert)
+  setupPrivateMode();
   // Continue modal: show if previous session reached >3% and <97%
   var modal = document.getElementById("continue-modal");
   if(p > 3 && p < 97){
@@ -1463,6 +1617,9 @@ function renderAdmin(){
   document.getElementById("user-code-input").value = data.userCode || "";
   setSegmentedValue("text-align-seg", data.textAlign || "justify");
   document.getElementById("page-disabled-toggle").checked = !!data.pageDisabled;
+  // PRIVATE-MODE (delete next block to revert)
+  var pmt = document.getElementById("private-mode-toggle");
+  if(pmt) pmt.checked = !!data.privateMode;
   renderLogs();
   attachAdminScrollTracking();
 }
@@ -1778,6 +1935,8 @@ function saveSettings(){
   var oldCode = data.userCode;
   data.userCode = newCode;
   data.pageDisabled = document.getElementById("page-disabled-toggle").checked;
+  // PRIVATE-MODE (delete next line to revert)
+  data.privateMode = document.getElementById("private-mode-toggle").checked;
   data.textAlign = getSegmentedValue("text-align-seg") || "justify";
   // Re-render every admin preview (and user view if it's live) with the new
   // alignment, stripping any inline text-align from pasted content so the

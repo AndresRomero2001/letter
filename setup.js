@@ -85,6 +85,11 @@ if (fs.existsSync(dataPath) && !process.argv.includes("--force-data")) {
     // the reader only reveals it by selecting with the mouse. Safe default
     // is false. Admin toggles in settings.
     invisibleText: false,
+    // GATE-TEXT: admin-editable copy for the login screen (the first screen
+    // the user sees). Defaults match the previously-hardcoded strings so
+    // behavior is unchanged until the admin customizes them.
+    gateTitle: PAGE_TITLE,
+    gateSub: "Introduce el código de acceso",
     progress: { maxPercent: 0, lastPercent: 0, lastUpdated: "" },
     logs: []
   };
@@ -660,8 +665,9 @@ body.text-invisible #farewell-content ::-moz-selection{
 <div id="gate" class="screen">
   <div class="card">
     <div class="lock">&#128274;</div>
-    <h1>${PAGE_TITLE}</h1>
-    <p class="sub">Introduce el código de acceso</p>
+    <!-- GATE-TEXT: ids let applyGateCustomization() overwrite these from data -->
+    <h1 id="gate-title">${PAGE_TITLE}</h1>
+    <p class="sub" id="gate-sub">Introduce el código de acceso</p>
     <input type="password" id="code" placeholder="Código" autocomplete="off" autofocus>
     <button class="btn" id="unlock-btn">Entrar</button>
     <p class="error" id="error"></p>
@@ -744,6 +750,8 @@ body.text-invisible #farewell-content ::-moz-selection{
       <button class="tab" data-tab="edit-letter">Editar carta</button>
       <button class="tab" data-tab="edit-disclaimer">Editar disclaimer</button>
       <button class="tab" data-tab="edit-farewell">Editar despedida</button>
+      <!-- GATE-TEXT: login-screen customization tab -->
+      <button class="tab" data-tab="edit-gate">Pantalla de acceso</button>
       <button class="tab" data-tab="logs">Logs</button>
       <button class="tab" data-tab="settings">Configuración</button>
     </div>
@@ -853,6 +861,25 @@ body.text-invisible #farewell-content ::-moz-selection{
         <div style="margin-top:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
           <button class="btn btn-sm" onclick="saveFarewell()">Guardar despedida</button>
           <span id="farewell-save-status" class="status"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- GATE-TEXT: edit login-screen copy -->
+    <div id="panel-edit-gate" class="panel hidden">
+      <div style="max-width:520px;margin:0 auto">
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:14px">Texto de la pantalla de acceso (la primera pantalla que ve el usuario antes de introducir el código).</p>
+        <div class="field">
+          <label>Título</label>
+          <input type="text" id="gate-title-input" placeholder="${PAGE_TITLE}" style="text-align:left;letter-spacing:0">
+        </div>
+        <div class="field">
+          <label>Subtítulo</label>
+          <input type="text" id="gate-sub-input" placeholder="Introduce el código de acceso" style="text-align:left;letter-spacing:0">
+        </div>
+        <div style="margin-top:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <button class="btn btn-sm" onclick="saveGate()">Guardar pantalla</button>
+          <span id="gate-save-status" class="status"></span>
         </div>
       </div>
     </div>
@@ -1027,6 +1054,26 @@ function fetchData(){
     return JSON.parse(decodeURIComponent(escape(raw)));
   });
 }
+// ── GATE-TEXT ───────────────────────────────────────────────────────
+// Paint the login screen with admin-customized title/subtitle pulled from
+// data.gateTitle / data.gateSub. Called from:
+//   - preloadGate() on page load (anonymous fetch, before the user logs in)
+//   - saveGate()    after the admin clicks "Guardar pantalla"
+// Anything missing falls back to whatever the template baked in, so the
+// gate is never blank if the fetch fails.
+function applyGateCustomization(d){
+  if(!d) return;
+  if(d.gateTitle){
+    var t = document.getElementById("gate-title");
+    if(t) t.textContent = d.gateTitle;
+  }
+  if(d.gateSub){
+    var s = document.getElementById("gate-sub");
+    if(s) s.textContent = d.gateSub;
+  }
+}
+// ── /GATE-TEXT ──────────────────────────────────────────────────────
+
 function saveData(obj, _retry){
   if(!ghToken) return Promise.reject(new Error("no-token"));
   var content = JSON.stringify(obj, null, 2);
@@ -1180,6 +1227,10 @@ function applyInvisibleText(){
 function routeAfterLogin(){
   // INVISIBLE-TEXT (delete next line to revert)
   applyInvisibleText();
+  // GATE-TEXT: keep the login card in sync with freshly-fetched data so
+  // the next logout shows the admin's latest customization without a
+  // full page reload.
+  applyGateCustomization(data);
   if(data.pageDisabled && !isAdmin){
     show("disabled-screen");
     return;
@@ -1691,6 +1742,11 @@ function renderAdmin(){
   // INVISIBLE-TEXT (delete next block to revert)
   var itt = document.getElementById("invisible-text-toggle");
   if(itt) itt.checked = !!data.invisibleText;
+  // GATE-TEXT: populate gate-customization inputs
+  var gt = document.getElementById("gate-title-input");
+  if(gt) gt.value = data.gateTitle || "";
+  var gs = document.getElementById("gate-sub-input");
+  if(gs) gs.value = data.gateSub || "";
   renderLogs();
   attachAdminScrollTracking();
 }
@@ -1998,6 +2054,22 @@ function saveFarewell(){
     else statusErr(st, r.message||"Error");
   }).catch(function(){ statusErr(st,"Sin conexión"); });
 }
+// GATE-TEXT: admin save for login-screen title/subtitle.
+function saveGate(){
+  var st = document.getElementById("gate-save-status"); statusLoading(st);
+  var t = document.getElementById("gate-title-input").value.trim();
+  var s = document.getElementById("gate-sub-input").value.trim();
+  if(!t){ statusErr(st,"El título no puede estar vacío"); return; }
+  if(!s){ statusErr(st,"El subtítulo no puede estar vacío"); return; }
+  data.gateTitle = t;
+  data.gateSub = s;
+  saveData(data).then(function(r){
+    if(r.content){
+      statusOk(st);
+      applyGateCustomization(data);
+    } else statusErr(st, r.message||"Error");
+  }).catch(function(){ statusErr(st,"Sin conexión"); });
+}
 function saveSettings(){
   var st = document.getElementById("settings-status");
   var newCode = document.getElementById("user-code-input").value.trim();
@@ -2228,6 +2300,13 @@ document.getElementById("btn-read").addEventListener("click", onDisclaimerRead);
 document.getElementById("btn-cancel").addEventListener("click", onDisclaimerCancel);
 document.getElementById("btn-continue-resume").addEventListener("click", resumeReading);
 document.getElementById("btn-continue-restart").addEventListener("click", restartReading);
+
+// GATE-TEXT: anonymous pre-login fetch. Pulls data.json with no auth so
+// the very first thing the visitor sees has the admin's custom copy. If
+// the fetch fails (offline, rate-limit, etc.) the template defaults stay
+// and behavior is unchanged. Uses the same fetchData pipeline so the
+// sha / content paths are handled identically.
+fetchData().then(applyGateCustomization).catch(function(){});
 
 </script>
 </body>

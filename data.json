@@ -6,8 +6,8 @@
   "pageDisabled": false,
   "progress": {
     "maxPercent": 100,
-    "lastPercent": 3.8399385552811776,
-    "lastUpdated": "2026-04-21T21:17:12.022Z",
+    "lastPercent": 0,
+    "lastUpdated": "2026-04-21T21:24:05.157Z",
     "finishedLogged": true,
     "lastLoggedPercent": 45.86827205618864
   },
@@ -479,6 +479,267 @@
       "role": "admin",
       "ip": "88.1.48.71",
       "fp": "c86c3813"
+    },
+    {
+      "ts": "21/4/2026, 23:20:49",
+      "tsISO": "2026-04-21T21:20:49.373Z",
+      "type": "login",
+      "detail": "user",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 23:20:50",
+      "tsISO": "2026-04-21T21:20:50.506Z",
+      "type": "disclaimer_shown",
+      "detail": "",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 23:20:52",
+      "tsISO": "2026-04-21T21:20:52.793Z",
+      "type": "read",
+      "detail": "Aceptó leer la carta",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 23:20:52",
+      "tsISO": "2026-04-21T21:20:52.796Z",
+      "type": "capture",
+      "detail": "session-start @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 23:20:56",
+      "tsISO": "2026-04-21T21:20:56.345Z",
+      "type": "progress",
+      "detail": "Continuó desde 4%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 23:20:57",
+      "tsISO": "2026-04-21T21:20:57.496Z",
+      "type": "capture",
+      "detail": "touch-release:scroll-idle @4%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 23:21:00",
+      "tsISO": "2026-04-21T21:21:00.970Z",
+      "type": "capture",
+      "detail": "context-menu @4%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 23:21:01",
+      "tsISO": "2026-04-21T21:21:01.639Z",
+      "type": "capture",
+      "detail": "touch-release:touchend @4%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 23:21:07",
+      "tsISO": "2026-04-21T21:21:07.684Z",
+      "type": "capture",
+      "detail": "touch-release:scroll-idle @1%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 23:21:11",
+      "tsISO": "2026-04-21T21:21:11.083Z",
+      "type": "capture",
+      "detail": "touch-release:scroll-idle @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 23:21:14",
+      "tsISO": "2026-04-21T21:21:14.242Z",
+      "type": "capture",
+      "detail": "touch-release:touchend @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 23:21:15",
+      "tsISO": "2026-04-21T21:21:15.340Z",
+      "type": "capture",
+      "detail": "context-menu @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 23:21:18",
+      "tsISO": "2026-04-21T21:21:18.240Z",
+      "type": "capture",
+      "detail": "touch-release:touchcancel @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 23:21:21",
+      "tsISO": "2026-04-21T21:21:21.092Z",
+      "type": "capture",
+      "detail": "context-menu @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 23:21:24",
+      "tsISO": "2026-04-21T21:21:24.062Z",
+      "type": "capture",
+      "detail": "touch-release:touchcancel @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 23:21:26",
+      "tsISO": "2026-04-21T21:21:26.750Z",
+      "type": "capture",
+      "detail": "context-menu @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 23:21:27",
+      "tsISO": "2026-04-21T21:21:27.890Z",
+      "type": "capture",
+      "detail": "touch-release:touchcancel @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 23:21:30",
+      "tsISO": "2026-04-21T21:21:30.517Z",
+      "type": "capture",
+      "detail": "context-menu @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 23:21:31",
+      "tsISO": "2026-04-21T21:21:31.031Z",
+      "type": "capture",
+      "detail": "touch-release:touchcancel @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 23:21:39",
+      "tsISO": "2026-04-21T21:21:39.268Z",
+      "type": "capture",
+      "detail": "context-menu @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 23:21:41",
+      "tsISO": "2026-04-21T21:21:41.076Z",
+      "type": "capture",
+      "detail": "focus-loss:window-blur @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 23:22:02",
+      "tsISO": "2026-04-21T21:22:02.195Z",
+      "type": "login",
+      "detail": "user",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "4bfd9484"
+    },
+    {
+      "ts": "21/4/2026, 23:22:03",
+      "tsISO": "2026-04-21T21:22:03.136Z",
+      "type": "capture",
+      "detail": "session-start @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "4bfd9484"
+    },
+    {
+      "ts": "21/4/2026, 23:22:05",
+      "tsISO": "2026-04-21T21:22:05.688Z",
+      "type": "capture",
+      "detail": "context-menu @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "4bfd9484"
+    },
+    {
+      "ts": "21/4/2026, 23:22:08",
+      "tsISO": "2026-04-21T21:22:08.645Z",
+      "type": "capture",
+      "detail": "touch-release:touchcancel @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "4bfd9484"
+    },
+    {
+      "ts": "21/4/2026, 23:22:08",
+      "tsISO": "2026-04-21T21:22:08.858Z",
+      "type": "capture",
+      "detail": "context-menu @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "4bfd9484"
+    },
+    {
+      "ts": "21/4/2026, 23:22:13",
+      "tsISO": "2026-04-21T21:22:13.876Z",
+      "type": "capture",
+      "detail": "context-menu @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "4bfd9484"
+    },
+    {
+      "ts": "21/4/2026, 23:22:14",
+      "tsISO": "2026-04-21T21:22:14.286Z",
+      "type": "capture",
+      "detail": "focus-loss:window-blur @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "4bfd9484"
+    },
+    {
+      "ts": "21/4/2026, 23:24:05",
+      "tsISO": "2026-04-21T21:24:05.138Z",
+      "type": "capture",
+      "detail": "focus-loss:window-blur @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "4bfd9484"
     }
   ],
   "textAlign": "justify",
@@ -486,6 +747,6 @@
   "privateMode": true,
   "invisibleText": true,
   "touchToRead": true,
-  "highlightSecretEnabled": true,
+  "highlightSecretEnabled": false,
   "highlightSecretWord": "Sorpresa <3"
 }

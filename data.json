@@ -200,10 +200,46 @@
       "role": "user",
       "ip": "88.1.48.71",
       "fp": "c86c3813"
+    },
+    {
+      "ts": "21/4/2026, 21:57:52",
+      "tsISO": "2026-04-21T19:57:52.235Z",
+      "type": "capture",
+      "detail": "focus-loss:window-blur",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "c86c3813"
+    },
+    {
+      "ts": "21/4/2026, 21:58:11",
+      "tsISO": "2026-04-21T19:58:11.191Z",
+      "type": "capture",
+      "detail": "focus-loss:window-blur",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "c86c3813"
+    },
+    {
+      "ts": "21/4/2026, 21:58:16",
+      "tsISO": "2026-04-21T19:58:16.100Z",
+      "type": "capture",
+      "detail": "focus-loss:window-blur",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "c86c3813"
+    },
+    {
+      "ts": "21/4/2026, 21:58:25",
+      "tsISO": "2026-04-21T19:58:25.207Z",
+      "type": "capture",
+      "detail": "focus-loss:window-blur",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "c86c3813"
     }
   ],
   "textAlign": "justify",
   "farewell": "<p>Respeto y entiendo tu decisión. La carta seguirá disponible en esta web hasta que al admin le apetezca, pero no tienes por qué volver.</p>",
-  "privateMode": false,
+  "privateMode": true,
   "invisibleText": true
 }

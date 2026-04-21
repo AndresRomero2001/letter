@@ -81,6 +81,10 @@ if (fs.existsSync(dataPath) && !process.argv.includes("--force-data")) {
     // PRIVATE-MODE: soft screen-capture deterrents on user view. Safe default
     // is false (no deterrents). Admin can toggle in settings.
     privateMode: false,
+    // INVISIBLE-TEXT: render letter/disclaimer/farewell text transparent so
+    // the reader only reveals it by selecting with the mouse. Safe default
+    // is false. Admin toggles in settings.
+    invisibleText: false,
     progress: { maxPercent: 0, lastPercent: 0, lastUpdated: "" },
     logs: []
   };
@@ -557,6 +561,48 @@ body.private-mode.private-blurred #farewell-content{
   filter:blur(22px);transition:filter .12s ease-out;
 }
 /* ── /PRIVATE-MODE ──────────────────────────────────────────────────── */
+
+/* ── INVISIBLE-TEXT mode ─────────────────────────────────────────────
+   Letter/disclaimer/farewell text rendered transparent; the reader
+   discovers it by dragging-to-select — the selection highlight paints
+   the characters visible via ::selection. Toggled by data.invisibleText.
+   To revert: delete this block, the INVISIBLE-TEXT admin toggle row,
+   the applyInvisibleText function, the routeAfterLogin / saveSettings /
+   logout call sites, the renderAdmin checkbox set, the saveSettings
+   field read, and the invisibleText field in data.json defaults.
+   All tagged with INVISIBLE-TEXT. */
+body.text-invisible #letter-content,
+body.text-invisible #letter-content *,
+body.text-invisible #disclaimer-content,
+body.text-invisible #disclaimer-content *,
+body.text-invisible #farewell-content,
+body.text-invisible #farewell-content *{
+  color:transparent!important;text-shadow:none!important;
+  -webkit-text-fill-color:transparent!important;
+}
+/* Force user-select back on — PRIVATE-MODE disables it on the same
+   elements and would make invisible text impossible to reveal. Copy/cut
+   are still blocked by PRIVATE-MODE's JS event listeners, so content
+   can be read but not extracted. */
+body.text-invisible #letter-content,
+body.text-invisible .papyrus,
+body.text-invisible #disclaimer-content,
+body.text-invisible #farewell-content{
+  -webkit-user-select:text!important;user-select:text!important;
+  -webkit-touch-callout:default!important;
+}
+body.text-invisible #letter-content ::selection,
+body.text-invisible #disclaimer-content ::selection,
+body.text-invisible #farewell-content ::selection{
+  color:#fff!important;-webkit-text-fill-color:#fff!important;
+  background:rgba(139,92,246,.55)!important;
+}
+body.text-invisible #letter-content ::-moz-selection,
+body.text-invisible #disclaimer-content ::-moz-selection,
+body.text-invisible #farewell-content ::-moz-selection{
+  color:#fff!important;background:rgba(139,92,246,.55)!important;
+}
+/* ── /INVISIBLE-TEXT ────────────────────────────────────────────────── */
 .logs-filter{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .logs-filter button{
   padding:6px 10px;border-radius:8px;border:none;background:rgba(255,255,255,.06);
@@ -856,6 +902,15 @@ body.private-mode.private-blurred #farewell-content{
         <label class="toggle"><input type="checkbox" id="private-mode-toggle"><span class="slider"></span></label>
       </div>
       <!-- /PRIVATE-MODE -->
+      <!-- INVISIBLE-TEXT admin toggle (delete this whole div to revert) -->
+      <div class="toggle-row" style="padding:14px 16px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:14px;margin-top:14px">
+        <div>
+          <label style="color:#c4b5fd;font-weight:600">Texto invisible</label>
+          <div style="font-size:.78rem;color:var(--muted);margin-top:4px;line-height:1.5">El texto aparece transparente; el usuario lo revela arrastrando el ratón para seleccionarlo (el resaltado de la selección hace visibles las letras). No afecta a los editores del panel de administración.</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="invisible-text-toggle"><span class="slider"></span></label>
+      </div>
+      <!-- /INVISIBLE-TEXT -->
       <div class="toggle-row danger-section">
         <div>
           <label style="color:var(--err);font-weight:600">Desactivar página</label>
@@ -1111,7 +1166,20 @@ function unlock(){
   });
 }
 
+// ── INVISIBLE-TEXT apply helper ─────────────────────────────────────
+// Toggles body.text-invisible based on data.invisibleText so the CSS
+// block above kicks in across disclaimer / letter / farewell screens.
+// Called from routeAfterLogin (covers user and admin), saveSettings
+// (live update when admin toggles), and logout (cleanup).
+// To revert: delete this function and all call sites tagged INVISIBLE-TEXT.
+function applyInvisibleText(){
+  document.body.classList.toggle("text-invisible", !!(data && data.invisibleText));
+}
+// ── /INVISIBLE-TEXT ──────────────────────────────────────────────────
+
 function routeAfterLogin(){
+  // INVISIBLE-TEXT (delete next line to revert)
+  applyInvisibleText();
   if(data.pageDisabled && !isAdmin){
     show("disabled-screen");
     return;
@@ -1620,6 +1688,9 @@ function renderAdmin(){
   // PRIVATE-MODE (delete next block to revert)
   var pmt = document.getElementById("private-mode-toggle");
   if(pmt) pmt.checked = !!data.privateMode;
+  // INVISIBLE-TEXT (delete next block to revert)
+  var itt = document.getElementById("invisible-text-toggle");
+  if(itt) itt.checked = !!data.invisibleText;
   renderLogs();
   attachAdminScrollTracking();
 }
@@ -1937,6 +2008,9 @@ function saveSettings(){
   data.pageDisabled = document.getElementById("page-disabled-toggle").checked;
   // PRIVATE-MODE (delete next line to revert)
   data.privateMode = document.getElementById("private-mode-toggle").checked;
+  // INVISIBLE-TEXT (delete next 2 lines to revert)
+  data.invisibleText = document.getElementById("invisible-text-toggle").checked;
+  applyInvisibleText();
   data.textAlign = getSegmentedValue("text-align-seg") || "justify";
   // Re-render every admin preview (and user view if it's live) with the new
   // alignment, stripping any inline text-align from pasted content so the
@@ -2132,6 +2206,8 @@ document.addEventListener("click", function(e){
 // ── Logout / navigation ─────────────────────────────────────────────
 function logout(){
   persistProgress(true);
+  // INVISIBLE-TEXT (delete next line to revert)
+  document.body.classList.remove("text-invisible");
   data=null; isAdmin=false; ghToken=null; fileSha=null;
   document.getElementById("code").value="";
   document.querySelectorAll(".tab").forEach(function(t,i){t.classList.toggle("active", i===0);});

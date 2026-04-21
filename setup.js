@@ -576,10 +576,11 @@ body.private-mode.private-blurred #farewell-content{
    logout call sites, the renderAdmin checkbox set, the saveSettings
    field read, and the invisibleText field in data.json defaults.
    All tagged with INVISIBLE-TEXT. */
+/* Disclaimer is intentionally EXCLUDED — it's a consent screen, the
+   user needs to actually read it to decide, so hiding it would defeat
+   its purpose. Scope is the letter and the farewell only. */
 body.text-invisible #letter-content,
 body.text-invisible #letter-content *,
-body.text-invisible #disclaimer-content,
-body.text-invisible #disclaimer-content *,
 body.text-invisible #farewell-content,
 body.text-invisible #farewell-content *{
   color:transparent!important;text-shadow:none!important;
@@ -591,19 +592,16 @@ body.text-invisible #farewell-content *{
    can be read but not extracted. */
 body.text-invisible #letter-content,
 body.text-invisible .papyrus,
-body.text-invisible #disclaimer-content,
 body.text-invisible #farewell-content{
   -webkit-user-select:text!important;user-select:text!important;
   -webkit-touch-callout:default!important;
 }
 body.text-invisible #letter-content ::selection,
-body.text-invisible #disclaimer-content ::selection,
 body.text-invisible #farewell-content ::selection{
   color:#fff!important;-webkit-text-fill-color:#fff!important;
   background:rgba(139,92,246,.55)!important;
 }
 body.text-invisible #letter-content ::-moz-selection,
-body.text-invisible #disclaimer-content ::-moz-selection,
 body.text-invisible #farewell-content ::-moz-selection{
   color:#fff!important;background:rgba(139,92,246,.55)!important;
 }

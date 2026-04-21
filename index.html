@@ -475,10 +475,11 @@ body.private-mode.private-blurred #farewell-content{
    logout call sites, the renderAdmin checkbox set, the saveSettings
    field read, and the invisibleText field in data.json defaults.
    All tagged with INVISIBLE-TEXT. */
+/* Disclaimer is intentionally EXCLUDED — it's a consent screen, the
+   user needs to actually read it to decide, so hiding it would defeat
+   its purpose. Scope is the letter and the farewell only. */
 body.text-invisible #letter-content,
 body.text-invisible #letter-content *,
-body.text-invisible #disclaimer-content,
-body.text-invisible #disclaimer-content *,
 body.text-invisible #farewell-content,
 body.text-invisible #farewell-content *{
   color:transparent!important;text-shadow:none!important;
@@ -490,19 +491,16 @@ body.text-invisible #farewell-content *{
    can be read but not extracted. */
 body.text-invisible #letter-content,
 body.text-invisible .papyrus,
-body.text-invisible #disclaimer-content,
 body.text-invisible #farewell-content{
   -webkit-user-select:text!important;user-select:text!important;
   -webkit-touch-callout:default!important;
 }
 body.text-invisible #letter-content ::selection,
-body.text-invisible #disclaimer-content ::selection,
 body.text-invisible #farewell-content ::selection{
   color:#fff!important;-webkit-text-fill-color:#fff!important;
   background:rgba(139,92,246,.55)!important;
 }
 body.text-invisible #letter-content ::-moz-selection,
-body.text-invisible #disclaimer-content ::-moz-selection,
 body.text-invisible #farewell-content ::-moz-selection{
   color:#fff!important;background:rgba(139,92,246,.55)!important;
 }
@@ -873,7 +871,7 @@ body.text-invisible #farewell-content ::-moz-selection{
 <script>
 var GITHUB_API = "https://api.github.com/repos/AndresRomero2001/letter/contents/data.json";
 var ADMIN_HASH = "d8e02dc389f474320bf6ca93f9ae00fce62e319a52b29e7de04cb0658dda168d";
-var ENC_ADMIN_TOKEN = "404b9f7e8fad3d05c35361d2cd24a7fd:209219b2077b92aa1cd1eeef:ba55f7e47859f20ed29e10d497a67cf9:56e88f94c95de09be19239a396481c787d590267a7577d698016f3986de1cee7967d8524cda062c1";
+var ENC_ADMIN_TOKEN = "c852359e098f4377a9e563cedd57168d:71cb53e7d535645d1f1c37fd:d751e9e7c88ef53eb8d92819e22f52de:e3c230e4bf011a968ecf820263f55bc67cc3778b7bb26de0d0218c88e32c4e99a5480d5adcb33487";
 var ACCEPT_KEY = "letter_accepted_v1";
 var LAST_PERCENT_KEY = "letter_last_percent_v1";
 

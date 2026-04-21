@@ -7,7 +7,7 @@
   "progress": {
     "maxPercent": 100,
     "lastPercent": 0,
-    "lastUpdated": "2026-04-21T20:20:33.916Z",
+    "lastUpdated": "2026-04-21T19:59:01.388Z",
     "finishedLogged": true,
     "lastLoggedPercent": 45.86827205618864
   },
@@ -312,6 +312,6 @@
   ],
   "textAlign": "justify",
   "farewell": "<p>Respeto y entiendo tu decisión. La carta seguirá disponible en esta web hasta que al admin le apetezca, pero no tienes por qué volver.</p>",
-  "privateMode": false,
+  "privateMode": true,
   "invisibleText": true
 }

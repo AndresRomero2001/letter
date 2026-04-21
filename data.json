@@ -902,6 +902,15 @@
       "role": "user",
       "ip": "88.1.48.71",
       "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 23:26:07",
+      "tsISO": "2026-04-21T21:26:07.990Z",
+      "type": "capture",
+      "detail": "focus-loss:window-blur @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
     }
   ],
   "textAlign": "justify",

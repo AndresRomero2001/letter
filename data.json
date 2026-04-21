@@ -317,6 +317,15 @@
       "role": "user",
       "ip": "88.1.48.71",
       "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 22:21:05",
+      "tsISO": "2026-04-21T20:21:05.684Z",
+      "type": "disclaimer_shown",
+      "detail": "",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
     }
   ],
   "textAlign": "justify",

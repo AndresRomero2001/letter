@@ -362,6 +362,15 @@
       "role": "user",
       "ip": "88.1.48.71",
       "fp": "4bfd9484"
+    },
+    {
+      "ts": "21/4/2026, 22:22:22",
+      "tsISO": "2026-04-21T20:22:22.508Z",
+      "type": "capture",
+      "detail": "session-start",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "4bfd9484"
     }
   ],
   "textAlign": "justify",

@@ -873,7 +873,7 @@ body.text-invisible #farewell-content ::-moz-selection{
 <script>
 var GITHUB_API = "https://api.github.com/repos/AndresRomero2001/letter/contents/data.json";
 var ADMIN_HASH = "d8e02dc389f474320bf6ca93f9ae00fce62e319a52b29e7de04cb0658dda168d";
-var ENC_ADMIN_TOKEN = "44c6d921a88d7afdc529f73438681f1b:595c760d1637898d4c76a67e:1ecf32df74a081d1c736a04441da403c:4b9fcefb488b1789028ae2a583bd6d527a6c46dc9ef0e0778e5cdf16c5e45bb6345c50ba7744b973";
+var ENC_ADMIN_TOKEN = "404b9f7e8fad3d05c35361d2cd24a7fd:209219b2077b92aa1cd1eeef:ba55f7e47859f20ed29e10d497a67cf9:56e88f94c95de09be19239a396481c787d590267a7577d698016f3986de1cee7967d8524cda062c1";
 var ACCEPT_KEY = "letter_accepted_v1";
 var LAST_PERCENT_KEY = "letter_last_percent_v1";
 
@@ -1276,7 +1276,19 @@ function setupPrivateMode(){
     var now = Date.now();
     if(lastLogAt[key] && now - lastLogAt[key] < 3000) return;
     lastLogAt[key] = now;
-    appendLog("capture", detail);
+    // Annotate with current read position so the admin can see WHICH part
+    // of the letter was on-screen when capture was attempted. Only makes
+    // sense once the letter is actually being read (letter-screen visible
+    // + scroll tracking attached); session-start / gate-state events fire
+    // before that, in which case currentScrollPercent() returns 100 from
+    // the div-never-scrolls path, so we gate on letter-screen visibility.
+    var p = null;
+    var ls = document.getElementById("letter-screen");
+    if(ls && !ls.classList.contains("hidden") && typeof currentScrollPercent === "function"){
+      p = Math.round(currentScrollPercent());
+    }
+    var msg = (p !== null) ? detail + " @" + p + "%" : detail;
+    appendLog("capture", msg);
   }
   var blurTimer = null;
   function blurOn(reason){

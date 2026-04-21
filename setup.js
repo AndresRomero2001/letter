@@ -1377,7 +1377,19 @@ function setupPrivateMode(){
     var now = Date.now();
     if(lastLogAt[key] && now - lastLogAt[key] < 3000) return;
     lastLogAt[key] = now;
-    appendLog("capture", detail);
+    // Annotate with current read position so the admin can see WHICH part
+    // of the letter was on-screen when capture was attempted. Only makes
+    // sense once the letter is actually being read (letter-screen visible
+    // + scroll tracking attached); session-start / gate-state events fire
+    // before that, in which case currentScrollPercent() returns 100 from
+    // the div-never-scrolls path, so we gate on letter-screen visibility.
+    var p = null;
+    var ls = document.getElementById("letter-screen");
+    if(ls && !ls.classList.contains("hidden") && typeof currentScrollPercent === "function"){
+      p = Math.round(currentScrollPercent());
+    }
+    var msg = (p !== null) ? detail + " @" + p + "%" : detail;
+    appendLog("capture", msg);
   }
   var blurTimer = null;
   function blurOn(reason){

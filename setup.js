@@ -170,6 +170,9 @@ body.letter-mode{
 .lock{font-size:48px;margin-bottom:12px}
 h1{font-size:1.4rem;font-weight:600;margin-bottom:6px}
 .sub{color:var(--muted);font-size:.88rem;margin-bottom:28px}
+/* GATE-TEXT: preserve line breaks so the admin can put a multi-line
+   enigma in the subtitle (delete this rule to revert). */
+#gate-sub{white-space:pre-wrap;text-align:center;line-height:1.55}
 input[type=password],input[type=text]{
   width:100%;padding:14px 18px;border:2px solid rgba(255,255,255,.15);
   border-radius:14px;background:rgba(255,255,255,.06);color:#fff;
@@ -650,9 +653,11 @@ body.secret-highlight-on #letter-content ::-moz-selection{
 }
 /* Make #letter-content a positioning context so overlay rects can be
    placed relative to it (and scroll with it naturally). Also raise text
-   above the overlay. */
+   above the overlay. The :not() exclusion is important: without it, the
+   layer itself gets position:relative from this rule and loses its
+   absolute positioning (its own #id rule has lower specificity). */
 body.secret-highlight-on #letter-content{position:relative}
-body.secret-highlight-on #letter-content > *{position:relative;z-index:2}
+body.secret-highlight-on #letter-content > :not(#secret-highlight-layer){position:relative;z-index:2}
 /* ── /SECRET-HIGHLIGHT ──────────────────────────────────────────────── */
 .logs-filter{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .logs-filter button{
@@ -920,8 +925,9 @@ body.secret-highlight-on #letter-content > *{position:relative;z-index:2}
           <input type="text" id="gate-title-input" placeholder="${PAGE_TITLE}" style="text-align:left;letter-spacing:0">
         </div>
         <div class="field">
-          <label>Subtítulo</label>
-          <input type="text" id="gate-sub-input" placeholder="Introduce el código de acceso" style="text-align:left;letter-spacing:0">
+          <label>Subtítulo / enigma</label>
+          <textarea id="gate-sub-input" rows="4" placeholder="Introduce el código de acceso&#10;&#10;(Puedes escribir un enigma o pista en varias líneas)" style="width:100%;padding:14px 18px;border:2px solid rgba(255,255,255,.15);border-radius:14px;background:rgba(255,255,255,.06);color:#fff;font-size:.95rem;letter-spacing:0;text-align:left;outline:none;resize:vertical;min-height:110px;font-family:inherit;line-height:1.55"></textarea>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:6px">Los saltos de línea se conservan en la pantalla de acceso.</div>
         </div>
         <div style="margin-top:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
           <button class="btn btn-sm" onclick="saveGate()">Guardar pantalla</button>

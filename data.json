@@ -524,6 +524,15 @@
       "role": "user",
       "ip": "88.1.48.71",
       "fp": "10bd5ae3"
+    },
+    {
+      "ts": "21/4/2026, 23:20:57",
+      "tsISO": "2026-04-21T21:20:57.496Z",
+      "type": "capture",
+      "detail": "touch-release:scroll-idle @4%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "10bd5ae3"
     }
   ],
   "textAlign": "justify",

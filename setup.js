@@ -91,6 +91,13 @@ if (fs.existsSync(dataPath) && !process.argv.includes("--force-data")) {
     // the reader only reveals it by selecting with the mouse. Safe default
     // is false. Admin toggles in settings.
     invisibleText: false,
+    // SECRET-HIGHLIGHT: when enabled AND a secret word is set, the native
+    // selection background in the letter is replaced by a per-rect overlay
+    // that shows the secret word tiled vertically (rotated -90°) in a
+    // warm-cream color on a deep-teal background. Only the portion of the
+    // watermark inside the selection is visible. Safe defaults: off / "".
+    highlightSecretEnabled: false,
+    highlightSecretWord: "",
     // GATE-TEXT: admin-editable copy for the login screen (the first screen
     // the user sees). Defaults match the previously-hardcoded strings so
     // behavior is unchanged until the admin customizes them.
@@ -612,6 +619,41 @@ body.text-invisible #farewell-content ::-moz-selection{
   color:#fff!important;background:rgba(139,92,246,.55)!important;
 }
 /* ── /INVISIBLE-TEXT ────────────────────────────────────────────────── */
+
+/* ── SECRET-HIGHLIGHT mode ───────────────────────────────────────────
+   When body.secret-highlight-on is set, the native selection background
+   inside the letter is suppressed. In its place, a JS-managed overlay
+   paints one <div class="secret-rect"> per client-rect of the selection,
+   each filled with a tiled SVG of the secret word rotated -90° (cream
+   letters on deep teal). Text inside the selection stays readable via
+   ::selection { color:#fff } so the letter content reads cleanly on
+   top of the watermark.
+   Scope: only #letter-content — disclaimer, farewell and admin editors
+   are intentionally excluded. To revert cleanly: delete this block, the
+   SECRET-HIGHLIGHT admin UI, the setupSecretHighlight function, the
+   routeAfterLogin call, the renderAdmin + saveSettings hooks, and the
+   highlightSecretEnabled / highlightSecretWord fields in data defaults.
+   All call sites tagged with SECRET-HIGHLIGHT. */
+body.secret-highlight-on #letter-content ::selection{
+  background:transparent!important;color:#fff!important;-webkit-text-fill-color:#fff!important;
+}
+body.secret-highlight-on #letter-content ::-moz-selection{
+  background:transparent!important;color:#fff!important;
+}
+#secret-highlight-layer{
+  position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;z-index:1;
+}
+#secret-highlight-layer .secret-rect{
+  position:absolute;pointer-events:none;overflow:hidden;border-radius:2px;
+  background-repeat:repeat;background-position:center top;
+  background-color:#0f766e;
+}
+/* Make #letter-content a positioning context so overlay rects can be
+   placed relative to it (and scroll with it naturally). Also raise text
+   above the overlay. */
+body.secret-highlight-on #letter-content{position:relative}
+body.secret-highlight-on #letter-content > *{position:relative;z-index:2}
+/* ── /SECRET-HIGHLIGHT ──────────────────────────────────────────────── */
 .logs-filter{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .logs-filter button{
   padding:6px 10px;border-radius:8px;border:none;background:rgba(255,255,255,.06);
@@ -951,6 +993,21 @@ body.text-invisible #farewell-content ::-moz-selection{
         <label class="toggle"><input type="checkbox" id="invisible-text-toggle"><span class="slider"></span></label>
       </div>
       <!-- /INVISIBLE-TEXT -->
+      <!-- SECRET-HIGHLIGHT admin card (delete this whole block to revert) -->
+      <div style="padding:14px 16px;background:rgba(15,118,110,.08);border:1px solid rgba(15,118,110,.25);border-radius:14px;margin-top:14px">
+        <div class="toggle-row" style="padding:0">
+          <div>
+            <label style="color:#5eead4;font-weight:600">Resaltado secreto</label>
+            <div style="font-size:.78rem;color:var(--muted);margin-top:4px;line-height:1.5">Al seleccionar texto en la carta, el fondo del resaltado muestra una palabra secreta repetida verticalmente (como marca de agua). Solo se revela dentro de la selección. Si la palabra está vacía, el efecto se desactiva aunque el interruptor esté activo.</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="highlight-secret-toggle"><span class="slider"></span></label>
+        </div>
+        <div style="margin-top:12px">
+          <label style="font-size:.8rem;color:var(--muted);display:block;margin-bottom:4px">Palabra secreta</label>
+          <input type="text" id="highlight-secret-word-input" placeholder="p. ej. carta" maxlength="40" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.2);color:#fff;font-size:.9rem" autocomplete="off">
+        </div>
+      </div>
+      <!-- /SECRET-HIGHLIGHT -->
       <div class="toggle-row danger-section">
         <div>
           <label style="color:var(--err);font-weight:600">Desactivar página</label>
@@ -1535,6 +1592,105 @@ function setupPrivateMode(){
 }
 // ── /PRIVATE-MODE setup ─────────────────────────────────────────────
 
+// ── SECRET-HIGHLIGHT setup ──────────────────────────────────────────
+// Replaces the native selection background inside #letter-content with a
+// per-rect overlay that tiles the admin's secret word vertically (cream
+// on teal). Active only on the user's letter view, when enabled AND a
+// word is set. See CSS block tagged SECRET-HIGHLIGHT for the companion
+// styles. Revert: delete this whole block and its call sites.
+var secretHighlightCleanup = null;
+function xmlEscape(s){
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&apos;");
+}
+function buildSecretHighlightSvg(word){
+  // Tile: fixed width, dynamic height so the rotated word fits inside.
+  // Letters 's','e','c','r','e','t','o' horizontally at font-size L are
+  // roughly L*0.55 each in serif. After rotate(-90) around center, that
+  // total width becomes the tile's vertical extent. We add padding so
+  // the word doesn't touch edges when repeated.
+  var w = String(word || "").trim();
+  if(!w) return "";
+  var letterH = 18;
+  var approxTextPx = w.length * letterH * 0.62;
+  var padding = 10;
+  var tileH = Math.max(Math.round(approxTextPx + padding * 2), 80);
+  var tileW = 22;
+  var bg = "#0f766e";
+  var fg = "#fef3c7";
+  var cx = tileW / 2;
+  var cy = tileH / 2;
+  var svg =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="' + tileW + '" height="' + tileH + '" viewBox="0 0 ' + tileW + ' ' + tileH + '">' +
+    '<rect width="100%" height="100%" fill="' + bg + '"/>' +
+    '<text x="' + cx + '" y="' + cy + '" fill="' + fg + '" font-family="Georgia, \'Times New Roman\', serif" font-size="' + letterH + '" letter-spacing="1.5" text-anchor="middle" dominant-baseline="central" transform="rotate(-90 ' + cx + ' ' + cy + ')">' +
+    xmlEscape(w) +
+    '</text>' +
+    '</svg>';
+  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+}
+function setupSecretHighlight(){
+  // Tear down any previous instance so toggling on/off cleanly reattaches.
+  if(secretHighlightCleanup){ secretHighlightCleanup(); }
+  if(isAdmin) return;
+  if(!data || !data.highlightSecretEnabled) return;
+  var word = (data.highlightSecretWord || "").trim();
+  if(!word) return;
+  var lc = document.getElementById("letter-content");
+  if(!lc) return;
+  document.body.classList.add("secret-highlight-on");
+  var bgUrl = buildSecretHighlightSvg(word);
+  // Overlay container lives INSIDE letter-content so its absolute children
+  // naturally scroll with the letter. letter-content is forced to
+  // position:relative by the CSS above.
+  var layer = document.getElementById("secret-highlight-layer");
+  if(!layer){
+    layer = document.createElement("div");
+    layer.id = "secret-highlight-layer";
+    lc.appendChild(layer);
+  }
+  function clearRects(){
+    while(layer.firstChild) layer.removeChild(layer.firstChild);
+  }
+  function render(){
+    clearRects();
+    var sel = window.getSelection && window.getSelection();
+    if(!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+    var range = sel.getRangeAt(0);
+    // Only render when the selection is (at least partially) inside the
+    // letter. commonAncestorContainer keeps us from painting overlays
+    // when the user selects text in the continue-modal or elsewhere.
+    if(!lc.contains(range.commonAncestorContainer)) return;
+    var rects = range.getClientRects();
+    if(!rects || rects.length === 0) return;
+    var originRect = lc.getBoundingClientRect();
+    for(var i = 0; i < rects.length; i++){
+      var r = rects[i];
+      if(r.width < 1 || r.height < 1) continue;
+      var d = document.createElement("div");
+      d.className = "secret-rect";
+      // Coords relative to letter-content, which is position:relative.
+      d.style.left = (r.left - originRect.left) + "px";
+      d.style.top = (r.top - originRect.top) + "px";
+      d.style.width = r.width + "px";
+      d.style.height = r.height + "px";
+      d.style.backgroundImage = 'url("' + bgUrl + '")';
+      layer.appendChild(d);
+    }
+  }
+  function onSelChange(){ render(); }
+  function onResize(){ render(); }
+  document.addEventListener("selectionchange", onSelChange);
+  window.addEventListener("resize", onResize);
+  secretHighlightCleanup = function(){
+    document.removeEventListener("selectionchange", onSelChange);
+    window.removeEventListener("resize", onResize);
+    if(layer && layer.parentNode){ layer.parentNode.removeChild(layer); }
+    document.body.classList.remove("secret-highlight-on");
+    secretHighlightCleanup = null;
+  };
+}
+// ── /SECRET-HIGHLIGHT setup ─────────────────────────────────────────
+
 function openLetter(){
   var lc = document.getElementById("letter-content");
   renderRichContent(lc, data.letter || "", data.textAlign || "justify");
@@ -1587,6 +1743,8 @@ function openLetter(){
   attachScrollTracking();
   // PRIVATE-MODE (delete next line to revert)
   setupPrivateMode();
+  // SECRET-HIGHLIGHT (delete next line to revert)
+  setupSecretHighlight();
   // Continue modal: show if previous session reached >3% and <97%
   var modal = document.getElementById("continue-modal");
   if(p > 3 && p < 97){
@@ -1826,6 +1984,11 @@ function renderAdmin(){
   // INVISIBLE-TEXT (delete next block to revert)
   var itt = document.getElementById("invisible-text-toggle");
   if(itt) itt.checked = !!data.invisibleText;
+  // SECRET-HIGHLIGHT (delete next block to revert)
+  var shT = document.getElementById("highlight-secret-toggle");
+  if(shT) shT.checked = !!data.highlightSecretEnabled;
+  var shW = document.getElementById("highlight-secret-word-input");
+  if(shW) shW.value = data.highlightSecretWord || "";
   // GATE-TEXT: populate gate-customization inputs
   var gt = document.getElementById("gate-title-input");
   if(gt) gt.value = data.gateTitle || "";
@@ -2169,6 +2332,9 @@ function saveSettings(){
   // INVISIBLE-TEXT (delete next 2 lines to revert)
   data.invisibleText = document.getElementById("invisible-text-toggle").checked;
   applyInvisibleText();
+  // SECRET-HIGHLIGHT (delete next 3 lines to revert)
+  data.highlightSecretEnabled = document.getElementById("highlight-secret-toggle").checked;
+  data.highlightSecretWord = document.getElementById("highlight-secret-word-input").value.trim().slice(0, 40);
   data.textAlign = getSegmentedValue("text-align-seg") || "justify";
   // Re-render every admin preview (and user view if it's live) with the new
   // alignment, stripping any inline text-align from pasted content so the
@@ -2366,6 +2532,8 @@ function logout(){
   persistProgress(true);
   // INVISIBLE-TEXT (delete next line to revert)
   document.body.classList.remove("text-invisible");
+  // SECRET-HIGHLIGHT (delete next line to revert)
+  if(typeof secretHighlightCleanup === "function") secretHighlightCleanup();
   data=null; isAdmin=false; ghToken=null; fileSha=null;
   document.getElementById("code").value="";
   document.querySelectorAll(".tab").forEach(function(t,i){t.classList.toggle("active", i===0);});

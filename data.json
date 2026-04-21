@@ -7,7 +7,7 @@
   "progress": {
     "maxPercent": 100,
     "lastPercent": 0,
-    "lastUpdated": "2026-04-21T21:15:46.633Z",
+    "lastUpdated": "2026-04-21T21:07:00.273Z",
     "finishedLogged": true,
     "lastLoggedPercent": 45.86827205618864
   },
@@ -445,17 +445,29 @@
       "fp": "d5dd9c81"
     },
     {
-      "ts": "21/4/2026, 23:15:46",
-      "tsISO": "2026-04-21T21:15:46.639Z",
-      "type": "capture",
-      "detail": "focus-loss:visibilitychange @0%",
-      "role": "user",
+      "ts": "21/4/2026, 23:13:50",
+      "tsISO": "2026-04-21T21:13:50.305Z",
+      "type": "login",
+      "detail": "admin",
+      "role": "admin",
       "ip": "88.1.48.71",
-      "fp": "d5dd9c81"
+      "fp": "c86c3813"
+    },
+    {
+      "ts": "21/4/2026, 23:15:34",
+      "tsISO": "2026-04-21T21:15:34.069Z",
+      "type": "login",
+      "detail": "admin",
+      "role": "admin",
+      "ip": "88.1.48.71",
+      "fp": "c86c3813"
     }
   ],
   "textAlign": "justify",
   "farewell": "<p>Respeto y entiendo tu decisión. La carta seguirá disponible en esta web hasta que al admin le apetezca, pero no tienes por qué volver.</p>",
   "privateMode": true,
-  "invisibleText": true
+  "invisibleText": true,
+  "touchToRead": false,
+  "highlightSecretEnabled": false,
+  "highlightSecretWord": "Sorpresa <3"
 }

@@ -1703,51 +1703,6 @@
       "role": "admin",
       "ip": "88.1.48.71",
       "fp": "c86c3813"
-    },
-    {
-      "ts": "22/4/2026, 22:48:26",
-      "tsISO": "2026-04-22T20:48:26.820Z",
-      "type": "login",
-      "detail": "user",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "3be922ff"
-    },
-    {
-      "ts": "22/4/2026, 22:48:27",
-      "tsISO": "2026-04-22T20:48:27.803Z",
-      "type": "disclaimer_shown",
-      "detail": "",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "3be922ff"
-    },
-    {
-      "ts": "22/4/2026, 22:48:29",
-      "tsISO": "2026-04-22T20:48:29.045Z",
-      "type": "read",
-      "detail": "Aceptó leer la carta",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "3be922ff"
-    },
-    {
-      "ts": "22/4/2026, 22:48:29",
-      "tsISO": "2026-04-22T20:48:29.047Z",
-      "type": "capture",
-      "detail": "session-start @0%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "3be922ff"
-    },
-    {
-      "ts": "22/4/2026, 22:48:41",
-      "tsISO": "2026-04-22T20:48:41.435Z",
-      "type": "capture",
-      "detail": "focus-loss:window-blur @0%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "3be922ff"
     }
   ],
   "textAlign": "justify",
@@ -1756,7 +1711,7 @@
   "invisibleText": true,
   "touchToRead": true,
   "highlightSecretEnabled": true,
-  "highlightSecretWord": "Sorpresa <3",
+  "highlightSecretWord": "Sorpresita <3",
   "gateTitle": "Una carta para ti",
   "gateSub": "A veces lo importante se esconde, guarda silencio.\nOtras veces está justo delante de nosotros, esperando sin prisa.\nNo se revela a quien solo observa, sino a quien se atreve a ir más allá.\nHay momentos en los que sentimos que falta algo, sin saber muy bien qué.\nQuizá nunca estuvo lejos.\nQuizá solo haya que mirarlo con otros ojos.",
   "unrollAlways": true,

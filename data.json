@@ -1433,6 +1433,15 @@
       "role": "user",
       "ip": "88.1.48.71",
       "fp": "1481b615"
+    },
+    {
+      "ts": "22/4/2026, 20:13:20",
+      "tsISO": "2026-04-22T18:13:20.906Z",
+      "type": "capture",
+      "detail": "focus-loss:window-blur @48%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "1481b615"
     }
   ],
   "textAlign": "justify",

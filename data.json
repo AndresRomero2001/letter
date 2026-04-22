@@ -7,7 +7,7 @@
   "progress": {
     "maxPercent": 100,
     "lastPercent": 0,
-    "lastUpdated": "2026-04-22T20:13:22.065Z",
+    "lastUpdated": "2026-04-22T20:15:38.114Z",
     "finishedLogged": true,
     "lastLoggedPercent": 45.86827205618864
   },
@@ -1525,49 +1525,13 @@
       "fp": "c86c3813"
     },
     {
-      "ts": "22/4/2026, 22:13:31",
-      "tsISO": "2026-04-22T20:13:31.792Z",
-      "type": "login",
-      "detail": "user",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "56c0cc46"
-    },
-    {
-      "ts": "22/4/2026, 22:13:32",
-      "tsISO": "2026-04-22T20:13:32.792Z",
-      "type": "disclaimer_shown",
-      "detail": "",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "56c0cc46"
-    },
-    {
-      "ts": "22/4/2026, 22:13:35",
-      "tsISO": "2026-04-22T20:13:35.332Z",
-      "type": "read",
-      "detail": "Aceptó leer la carta",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "56c0cc46"
-    },
-    {
-      "ts": "22/4/2026, 22:13:35",
-      "tsISO": "2026-04-22T20:13:35.334Z",
+      "ts": "22/4/2026, 22:15:38",
+      "tsISO": "2026-04-22T20:15:38.119Z",
       "type": "capture",
-      "detail": "session-start @0%",
+      "detail": "focus-loss:visibilitychange @0%",
       "role": "user",
       "ip": "88.1.48.71",
-      "fp": "56c0cc46"
-    },
-    {
-      "ts": "22/4/2026, 22:13:42",
-      "tsISO": "2026-04-22T20:13:42.002Z",
-      "type": "capture",
-      "detail": "focus-loss:window-blur @0%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "56c0cc46"
+      "fp": "c86c3813"
     }
   ],
   "textAlign": "justify",

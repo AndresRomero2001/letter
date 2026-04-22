@@ -6,8 +6,8 @@
   "pageDisabled": false,
   "progress": {
     "maxPercent": 100,
-    "lastPercent": 0,
-    "lastUpdated": "2026-04-22T17:48:14.384Z",
+    "lastPercent": 11.459129106187929,
+    "lastUpdated": "2026-04-22T17:57:54.577Z",
     "finishedLogged": true,
     "lastLoggedPercent": 45.86827205618864
   },
@@ -1316,6 +1316,15 @@
       "role": "user",
       "ip": "88.1.48.71",
       "fp": "88568c8b"
+    },
+    {
+      "ts": "22/4/2026, 19:57:54",
+      "tsISO": "2026-04-22T17:57:54.550Z",
+      "type": "capture",
+      "detail": "focus-loss:window-blur @11%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "c86c3813"
     }
   ],
   "textAlign": "justify",

@@ -7,7 +7,7 @@
   "progress": {
     "maxPercent": 100,
     "lastPercent": 0,
-    "lastUpdated": "2026-04-22T20:13:19.003Z",
+    "lastUpdated": "2026-04-22T20:13:22.065Z",
     "finishedLogged": true,
     "lastLoggedPercent": 45.86827205618864
   },
@@ -1500,6 +1500,15 @@
     {
       "ts": "22/4/2026, 22:13:18",
       "tsISO": "2026-04-22T20:13:18.418Z",
+      "type": "capture",
+      "detail": "focus-loss:window-blur @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "c86c3813"
+    },
+    {
+      "ts": "22/4/2026, 22:13:22",
+      "tsISO": "2026-04-22T20:13:22.028Z",
       "type": "capture",
       "detail": "focus-loss:window-blur @0%",
       "role": "user",

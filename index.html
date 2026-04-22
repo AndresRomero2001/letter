@@ -605,34 +605,6 @@ body.secret-highlight-on #letter-content > :not(#secret-highlight-layer){positio
   .papyrus-footer-img{height:clamp(80px, 22vw, 140px)}
 }
 
-/* =============================================
-   UNROLL-ANIMATION (EXPERIMENTAL) — intro del pergamino.
-   "Una vez por sesión" al abrir la carta: header+footer
-   arrancan pegados (footer translateY negativo), el body se
-   revela con clip-path de arriba a abajo, y al terminar el
-   letter-header + progress-sticky hacen fade-in.
-   Clip-path es puramente visual: no cambia el layout, así
-   que la página no hace scroll mientras "crece" el pergamino.
-   Compatible con text-invisible (el clip solo recorta; si el
-   texto es invisible por CSS, sigue siéndolo al revelarse).
-
-   TO REVERT: borrar este bloque entero, el bloque
-   "UNROLL-ANIMATION" del <script>, y la línea que llama a
-   runPapyrusUnrollAnimation() dentro de openLetter().
-   ============================================= */
-body.papyrus-unrolling .letter-header,
-body.papyrus-unrolling .progress-sticky{
-  opacity:0;pointer-events:none;
-}
-body.papyrus-unrolling .papyrus-body{will-change:clip-path}
-body.papyrus-unrolling .papyrus-footer-img{will-change:transform}
-body.papyrus-unrolled .letter-header,
-body.papyrus-unrolled .progress-sticky{
-  animation:fadeIn .55s ease both;
-}
-/* =============================================
-   END UNROLL-ANIMATION
-   ============================================= */
 </style>
 </head>
 <body>
@@ -916,22 +888,6 @@ body.papyrus-unrolled .progress-sticky{
         </div>
       </div>
       <!-- /SECRET-HIGHLIGHT -->
-      <!-- UNROLL-ANIMATION admin card (delete this whole block to revert) -->
-      <div style="padding:14px 16px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:14px;margin-top:14px">
-        <div class="toggle-row" style="padding:0">
-          <div>
-            <label style="color:#c4b5fd;font-weight:600">Animación de apertura del pergamino</label>
-            <div style="font-size:.78rem;color:var(--muted);margin-top:4px;line-height:1.5">Al entrar en la carta, el pergamino se desenrolla de arriba a abajo revelando el texto. El usuario puede saltarla tocando o pulsando cualquier tecla.</div>
-          </div>
-          <label class="toggle"><input type="checkbox" id="unroll-always-toggle"><span class="slider"></span></label>
-        </div>
-        <div style="font-size:.78rem;color:var(--muted);margin-top:6px;padding-left:2px">Si está activo, la animación se reproduce cada vez que se abre la carta. Si está inactivo, solo la primera vez por sesión.</div>
-        <div style="margin-top:12px">
-          <label style="font-size:.8rem;color:var(--muted);display:block;margin-bottom:4px">Duración (segundos)</label>
-          <input type="number" id="unroll-duration-input" min="0.3" max="20" step="0.1" value="1.8" style="width:120px;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.2);color:#fff;font-size:.9rem">
-        </div>
-      </div>
-      <!-- /UNROLL-ANIMATION -->
       <div class="toggle-row danger-section">
         <div>
           <label style="color:var(--err);font-weight:600">Desactivar página</label>
@@ -1777,100 +1733,6 @@ function setupScrollExtendSelection(){
 }
 // ── /SCROLL-EXTEND-SELECTION ────────────────────────────────────────
 
-// =============================================
-// UNROLL-ANIMATION (EXPERIMENTAL) — intro del pergamino.
-// Corre una vez por sesión al entrar en la carta, salvo que
-// vaya a aparecer el modal "Continuar" (en ese caso no tiene
-// sentido animar detrás del overlay). El body se revela con
-// clip-path mientras el footer translada desde -bodyHeight a 0,
-// para que arranquen pegados al header y el pergamino se
-// "desenrolle" hacia abajo. letter-header + progress-sticky
-// quedan ocultos durante la animación y hacen fade-in al final.
-// El layout final (altura del documento) no cambia durante la
-// animación: clip-path y transform son visuales, así que la
-// página no hace scroll mientras se desenrolla.
-// Cualquier tecla, click o touch salta al estado final.
-//
-// Para replay durante pruebas:
-//   sessionStorage.removeItem("papyrus_unrolled_v1")
-//
-// TO REVERT: borrar esta función, la llamada dentro de
-// openLetter(), y el bloque CSS "UNROLL-ANIMATION".
-// =============================================
-var PAPYRUS_UNROLL_KEY = "papyrus_unrolled_v1";
-function runPapyrusUnrollAnimation(){
-  // Admin-configurable: data.unrollAlways bypasses the once-per-session
-  // guard, data.unrollDuration (seconds) overrides the default 1.8s.
-  var alwaysOn = !!(data && data.unrollAlways);
-  if(!alwaysOn){
-    try{
-      if(sessionStorage.getItem(PAPYRUS_UNROLL_KEY) === "1") return;
-    }catch(e){ return; }
-  }
-  var scope = document.getElementById("letter-screen");
-  if(!scope) return;
-  var bodyEl = scope.querySelector(".papyrus-body");
-  var footerEl = scope.querySelector(".papyrus-footer-img");
-  if(!bodyEl || !footerEl || typeof bodyEl.animate !== "function") return;
-
-  if(!alwaysOn){
-    try{ sessionStorage.setItem(PAPYRUS_UNROLL_KEY, "1"); }catch(e){}
-  }
-
-  // Add the class BEFORE measuring so letter-header/progress are
-  // already hidden (their fade-in waits for .papyrus-unrolled).
-  document.body.classList.add("papyrus-unrolling");
-  // Force a synchronous layout so offsetHeight is accurate. WAAPI
-  // with fill:"both" applies the first keyframe immediately, which
-  // together prevents a flash of the fully-rendered papyrus between
-  // show("letter-screen") and the first animation frame.
-  var h = bodyEl.offsetHeight;
-  if(h < 40) h = 40;
-
-  var durS = parseFloat(data && data.unrollDuration);
-  if(!isFinite(durS) || durS <= 0) durS = 1.8;
-  if(durS < 0.3) durS = 0.3;
-  if(durS > 20) durS = 20;
-  var duration = Math.round(durS * 1000);
-  var easing = "cubic-bezier(.2,.8,.2,1)";
-
-  var bodyAnim = bodyEl.animate(
-    [{clipPath:"inset(0 0 100% 0)"}, {clipPath:"inset(0 0 0 0)"}],
-    {duration:duration, easing:easing, fill:"both"}
-  );
-  var footerAnim = footerEl.animate(
-    [{transform:"translateY(" + (-h) + "px)"}, {transform:"translateY(0)"}],
-    {duration:duration, easing:easing, fill:"both"}
-  );
-
-  var finished = false;
-  function cleanup(){
-    if(finished) return;
-    finished = true;
-    try{ bodyAnim.finish(); }catch(e){}
-    try{ footerAnim.finish(); }catch(e){}
-    // Drop the WAAPI fills shortly after so no inline styles
-    // remain stuck on the elements (they return to pure CSS).
-    setTimeout(function(){
-      try{ bodyAnim.cancel(); }catch(e){}
-      try{ footerAnim.cancel(); }catch(e){}
-    }, 40);
-    document.body.classList.remove("papyrus-unrolling");
-    document.body.classList.add("papyrus-unrolled");
-    setTimeout(function(){
-      document.body.classList.remove("papyrus-unrolled");
-    }, 700);
-    window.removeEventListener("keydown", onSkip, true);
-    window.removeEventListener("pointerdown", onSkip, true);
-    window.removeEventListener("touchstart", onSkip, true);
-  }
-  function onSkip(){ cleanup(); }
-  bodyAnim.onfinish = cleanup;
-  window.addEventListener("keydown", onSkip, true);
-  window.addEventListener("pointerdown", onSkip, true);
-  window.addEventListener("touchstart", onSkip, true);
-}
-
 function openLetter(){
   var lc = document.getElementById("letter-content");
   renderRichContent(lc, data.letter || "", data.textAlign || "justify");
@@ -1920,10 +1782,6 @@ function openLetter(){
   updateProgressUI(0);
   show("letter-screen");
   window.scrollTo(0,0);
-  // UNROLL-ANIMATION (delete next 2 lines to revert) — skip if the
-  // "Continuar" modal will take over the view anyway.
-  var _willShowContinue = (p > 3 && p < 97);
-  if(!_willShowContinue) runPapyrusUnrollAnimation();
   attachScrollTracking();
   // PRIVATE-MODE (delete next line to revert)
   setupPrivateMode();
@@ -2175,14 +2033,6 @@ function renderAdmin(){
   if(shT) shT.checked = !!data.highlightSecretEnabled;
   var shW = document.getElementById("highlight-secret-word-input");
   if(shW) shW.value = data.highlightSecretWord || "";
-  // UNROLL-ANIMATION (delete next block to revert)
-  var uaT = document.getElementById("unroll-always-toggle");
-  if(uaT) uaT.checked = !!data.unrollAlways;
-  var uaD = document.getElementById("unroll-duration-input");
-  if(uaD){
-    var storedD = parseFloat(data.unrollDuration);
-    uaD.value = (isFinite(storedD) && storedD > 0) ? storedD : 1.8;
-  }
   renderLogs();
   attachAdminScrollTracking();
 }
@@ -2508,13 +2358,6 @@ function saveSettings(){
   // SECRET-HIGHLIGHT (delete next 3 lines to revert)
   data.highlightSecretEnabled = document.getElementById("highlight-secret-toggle").checked;
   data.highlightSecretWord = document.getElementById("highlight-secret-word-input").value.trim().slice(0, 40);
-  // UNROLL-ANIMATION (delete next block to revert)
-  data.unrollAlways = document.getElementById("unroll-always-toggle").checked;
-  var _uaRaw = parseFloat(document.getElementById("unroll-duration-input").value);
-  if(!isFinite(_uaRaw) || _uaRaw <= 0) _uaRaw = 1.8;
-  if(_uaRaw < 0.3) _uaRaw = 0.3;
-  if(_uaRaw > 20) _uaRaw = 20;
-  data.unrollDuration = Math.round(_uaRaw * 10) / 10;
   data.textAlign = getSegmentedValue("text-align-seg") || "justify";
   // Re-render every admin preview (and user view if it's live) with the new
   // alignment, stripping any inline text-align from pasted content so the

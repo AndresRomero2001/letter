@@ -59,6 +59,10 @@ h1{font-size:1.4rem;font-weight:600;margin-bottom:6px}
 /* GATE-TEXT: preserve line breaks so the admin can put a multi-line
    enigma in the subtitle (delete this rule to revert). */
 #gate-sub{white-space:pre-wrap;text-align:center;line-height:1.55}
+/* GATE-WIDE: enlarge the login card so multi-line enigmas have room
+   to breathe (the default .card is sized for a lone "enter code"
+   prompt). Scope: #gate only. Revert: delete this rule. */
+#gate > .card{max-width:600px}
 input[type=password],input[type=text]{
   width:100%;padding:14px 18px;border:2px solid rgba(255,255,255,.15);
   border-radius:14px;background:rgba(255,255,255,.06);color:#fff;
@@ -944,7 +948,7 @@ body.secret-highlight-on #letter-content > :not(#secret-highlight-layer){positio
 <script>
 var GITHUB_API = "https://api.github.com/repos/AndresRomero2001/letter/contents/data.json";
 var ADMIN_HASH = "d8e02dc389f474320bf6ca93f9ae00fce62e319a52b29e7de04cb0658dda168d";
-var ENC_ADMIN_TOKEN = "82f85f14185fd4450b2c886b2fc10dca:1f8cdaf03fa0dcbeb4a1c2d0:e7eef76bfdd07ad7d34534e38354a914:df81c36247a44aea7a9ddc1e10f8ed5aaeca475d3fe6b7e16b123b24845617e5654a299b5bc04372";
+var ENC_ADMIN_TOKEN = "e051029bb5333ecd54aa23712acd112a:dff65ed59475a33145247414:c6a5ca32e51b64c88b9afe1388849296:2e6aa96160c623a52b929241ef052203e005032adc276e8d26b1fcf42645e5dd7a70bffa0d232ee8";
 var ACCEPT_KEY = "letter_accepted_v1";
 var LAST_PERCENT_KEY = "letter_last_percent_v1";
 
@@ -1544,7 +1548,7 @@ function buildSecretHighlightSvg(word){
   var fontSize = Math.round(tileW * 0.75);
   var tileH = letterBox * w.length;
   var fg = "#fef3c7";
-  var op = 0.35;
+  var op = 0.22;
   var cx = tileW / 2;
   var letters = "";
   for(var i = 0; i < w.length; i++){

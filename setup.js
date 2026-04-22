@@ -173,6 +173,10 @@ h1{font-size:1.4rem;font-weight:600;margin-bottom:6px}
 /* GATE-TEXT: preserve line breaks so the admin can put a multi-line
    enigma in the subtitle (delete this rule to revert). */
 #gate-sub{white-space:pre-wrap;text-align:center;line-height:1.55}
+/* GATE-WIDE: enlarge the login card so multi-line enigmas have room
+   to breathe (the default .card is sized for a lone "enter code"
+   prompt). Scope: #gate only. Revert: delete this rule. */
+#gate > .card{max-width:600px}
 input[type=password],input[type=text]{
   width:100%;padding:14px 18px;border:2px solid rgba(255,255,255,.15);
   border-radius:14px;background:rgba(255,255,255,.06);color:#fff;
@@ -1658,7 +1662,7 @@ function buildSecretHighlightSvg(word){
   var fontSize = Math.round(tileW * 0.75);
   var tileH = letterBox * w.length;
   var fg = "#fef3c7";
-  var op = 0.35;
+  var op = 0.22;
   var cx = tileW / 2;
   var letters = "";
   for(var i = 0; i < w.length; i++){

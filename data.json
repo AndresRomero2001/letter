@@ -1183,76 +1183,31 @@
       "fp": "c86c3813"
     },
     {
-      "ts": "22/4/2026, 19:37:48",
-      "tsISO": "2026-04-22T17:37:48.607Z",
-      "type": "login",
-      "detail": "user",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
-    },
-    {
-      "ts": "22/4/2026, 19:37:49",
-      "tsISO": "2026-04-22T17:37:49.733Z",
-      "type": "capture",
-      "detail": "session-start @0%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
-    },
-    {
-      "ts": "22/4/2026, 19:37:52",
-      "tsISO": "2026-04-22T17:37:52.573Z",
-      "type": "capture",
-      "detail": "context-menu @0%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
-    },
-    {
-      "ts": "22/4/2026, 19:37:56",
-      "tsISO": "2026-04-22T17:37:56.905Z",
-      "type": "capture",
-      "detail": "context-menu @15%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
-    },
-    {
-      "ts": "22/4/2026, 19:38:01",
-      "tsISO": "2026-04-22T17:38:01.987Z",
-      "type": "capture",
-      "detail": "context-menu @17%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
-    },
-    {
-      "ts": "22/4/2026, 19:38:15",
-      "tsISO": "2026-04-22T17:38:15.708Z",
-      "type": "capture",
-      "detail": "context-menu @99%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
-    },
-    {
-      "ts": "22/4/2026, 19:38:33",
-      "tsISO": "2026-04-22T17:38:33.626Z",
+      "ts": "22/4/2026, 19:37:53",
+      "tsISO": "2026-04-22T17:37:53.728Z",
       "type": "progress",
       "detail": "90% leído",
       "role": "user",
       "ip": "88.1.48.71",
-      "fp": "4bfd9484"
+      "fp": "c86c3813"
     },
     {
-      "ts": "22/4/2026, 19:38:55",
-      "tsISO": "2026-04-22T17:38:55.070Z",
-      "type": "progress",
-      "detail": "90% leído",
+      "ts": "22/4/2026, 19:38:42",
+      "tsISO": "2026-04-22T17:38:42.997Z",
+      "type": "capture",
+      "detail": "focus-loss:window-blur @90%",
       "role": "user",
       "ip": "88.1.48.71",
-      "fp": "4bfd9484"
+      "fp": "c86c3813"
+    },
+    {
+      "ts": "22/4/2026, 19:39:20",
+      "tsISO": "2026-04-22T17:39:20.999Z",
+      "type": "capture",
+      "detail": "focus-loss:window-blur @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "c86c3813"
     }
   ],
   "textAlign": "justify",

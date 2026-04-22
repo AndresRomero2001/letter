@@ -1649,6 +1649,24 @@
       "role": "user",
       "ip": "88.1.48.71",
       "fp": "bccc52c4"
+    },
+    {
+      "ts": "22/4/2026, 22:41:35",
+      "tsISO": "2026-04-22T20:41:35.270Z",
+      "type": "capture",
+      "detail": "session-start @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "bccc52c4"
+    },
+    {
+      "ts": "22/4/2026, 22:41:41",
+      "tsISO": "2026-04-22T20:41:41.450Z",
+      "type": "capture",
+      "detail": "focus-loss:window-blur @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "bccc52c4"
     }
   ],
   "textAlign": "justify",

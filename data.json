@@ -6,8 +6,8 @@
   "pageDisabled": false,
   "progress": {
     "maxPercent": 100,
-    "lastPercent": 71.05019116493726,
-    "lastUpdated": "2026-04-22T17:41:34.473Z",
+    "lastPercent": 0,
+    "lastUpdated": "2026-04-22T17:48:14.384Z",
     "finishedLogged": true,
     "lastLoggedPercent": 45.86827205618864
   },
@@ -1183,184 +1183,40 @@
       "fp": "c86c3813"
     },
     {
-      "ts": "22/4/2026, 19:37:48",
-      "tsISO": "2026-04-22T17:37:48.607Z",
-      "type": "login",
-      "detail": "user",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
-    },
-    {
-      "ts": "22/4/2026, 19:37:49",
-      "tsISO": "2026-04-22T17:37:49.733Z",
-      "type": "capture",
-      "detail": "session-start @0%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
-    },
-    {
-      "ts": "22/4/2026, 19:37:52",
-      "tsISO": "2026-04-22T17:37:52.573Z",
-      "type": "capture",
-      "detail": "context-menu @0%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
-    },
-    {
-      "ts": "22/4/2026, 19:37:56",
-      "tsISO": "2026-04-22T17:37:56.905Z",
-      "type": "capture",
-      "detail": "context-menu @15%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
-    },
-    {
-      "ts": "22/4/2026, 19:38:01",
-      "tsISO": "2026-04-22T17:38:01.987Z",
-      "type": "capture",
-      "detail": "context-menu @17%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
-    },
-    {
-      "ts": "22/4/2026, 19:38:15",
-      "tsISO": "2026-04-22T17:38:15.708Z",
-      "type": "capture",
-      "detail": "context-menu @99%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
-    },
-    {
-      "ts": "22/4/2026, 19:38:33",
-      "tsISO": "2026-04-22T17:38:33.626Z",
+      "ts": "22/4/2026, 19:37:53",
+      "tsISO": "2026-04-22T17:37:53.728Z",
       "type": "progress",
       "detail": "90% leído",
       "role": "user",
       "ip": "88.1.48.71",
-      "fp": "4bfd9484"
+      "fp": "c86c3813"
     },
     {
-      "ts": "22/4/2026, 19:38:55",
-      "tsISO": "2026-04-22T17:38:55.070Z",
-      "type": "progress",
-      "detail": "90% leído",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
-    },
-    {
-      "ts": "22/4/2026, 19:40:30",
-      "tsISO": "2026-04-22T17:40:30.904Z",
+      "ts": "22/4/2026, 19:38:42",
+      "tsISO": "2026-04-22T17:38:42.997Z",
       "type": "capture",
-      "detail": "touch-release:touchend @99%",
+      "detail": "focus-loss:window-blur @90%",
       "role": "user",
       "ip": "88.1.48.71",
-      "fp": "4bfd9484"
+      "fp": "c86c3813"
     },
     {
-      "ts": "22/4/2026, 19:40:33",
-      "tsISO": "2026-04-22T17:40:33.938Z",
+      "ts": "22/4/2026, 19:39:20",
+      "tsISO": "2026-04-22T17:39:20.999Z",
       "type": "capture",
-      "detail": "touch-release:touchend @99%",
+      "detail": "focus-loss:window-blur @0%",
       "role": "user",
       "ip": "88.1.48.71",
-      "fp": "4bfd9484"
+      "fp": "c86c3813"
     },
     {
-      "ts": "22/4/2026, 19:40:38",
-      "tsISO": "2026-04-22T17:40:38.274Z",
+      "ts": "22/4/2026, 19:48:14",
+      "tsISO": "2026-04-22T17:48:14.387Z",
       "type": "capture",
-      "detail": "touch-release:touchend @99%",
+      "detail": "focus-loss:visibilitychange @0%",
       "role": "user",
       "ip": "88.1.48.71",
-      "fp": "4bfd9484"
-    },
-    {
-      "ts": "22/4/2026, 19:40:41",
-      "tsISO": "2026-04-22T17:40:41.310Z",
-      "type": "capture",
-      "detail": "touch-release:touchend @99%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
-    },
-    {
-      "ts": "22/4/2026, 19:40:45",
-      "tsISO": "2026-04-22T17:40:45.958Z",
-      "type": "capture",
-      "detail": "touch-release:touchend @99%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
-    },
-    {
-      "ts": "22/4/2026, 19:40:46",
-      "tsISO": "2026-04-22T17:40:46.624Z",
-      "type": "capture",
-      "detail": "context-menu @99%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
-    },
-    {
-      "ts": "22/4/2026, 19:40:50",
-      "tsISO": "2026-04-22T17:40:50.239Z",
-      "type": "capture",
-      "detail": "context-menu @99%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
-    },
-    {
-      "ts": "22/4/2026, 19:41:04",
-      "tsISO": "2026-04-22T17:41:04.641Z",
-      "type": "capture",
-      "detail": "context-menu @55%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
-    },
-    {
-      "ts": "22/4/2026, 19:41:12",
-      "tsISO": "2026-04-22T17:41:12.357Z",
-      "type": "capture",
-      "detail": "context-menu @52%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
-    },
-    {
-      "ts": "22/4/2026, 19:41:30",
-      "tsISO": "2026-04-22T17:41:30.000Z",
-      "type": "capture",
-      "detail": "context-menu @71%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
-    },
-    {
-      "ts": "22/4/2026, 19:41:33",
-      "tsISO": "2026-04-22T17:41:33.501Z",
-      "type": "capture",
-      "detail": "focus-loss:window-blur @71%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
-    },
-    {
-      "ts": "22/4/2026, 19:41:34",
-      "tsISO": "2026-04-22T17:41:34.006Z",
-      "type": "capture",
-      "detail": "touch-release:scroll-idle @71%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "4bfd9484"
+      "fp": "c86c3813"
     }
   ],
   "textAlign": "justify",

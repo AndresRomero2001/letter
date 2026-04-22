@@ -1651,6 +1651,16 @@ function buildSecretHighlightSvg(word){
   // to read), big enough that a single letter spans many rows of the
   // actual letter text. Very low opacity so the effect is "a bit hard
   // to notice" per spec.
+  //
+  // Visual centring: SVG's dominant-baseline="central" aligns the font
+  // em-box centre with y, NOT the glyph's ink centre. Digits, punct and
+  // descender letters all have different offsets between em-box centre
+  // and ink centre, so if we just trusted the baseline attribute each
+  // char would drift along a slightly different axis after the 90°
+  // rotation (most visibly: digits look shifted because they sit in
+  // the upper half of the em-box only). We measure each glyph's actual
+  // bbox with getBBox() and offset x/y so the ink centre lands on the
+  // rotation axis (cx, cy), making every char visually centred.
   var w = String(word || "").trim();
   if(!w) return "";
   var letterBox = 420;           // px of vertical space per letter in SVG units
@@ -1662,17 +1672,54 @@ function buildSecretHighlightSvg(word){
   var fontSize = Math.round(tileW * 0.75);
   var tileH = letterBox * w.length;
   var fg = "#fef3c7";
-  var op = 0.22;
+  var op = 0.15;
   var cx = tileW / 2;
-  var letters = "";
+
+  // Hidden measurement SVG so we can call getBBox() on each glyph
+  // positioned at (0,0) with no anchor/baseline tricks, and read its
+  // true ink rectangle.
+  var ns = "http://www.w3.org/2000/svg";
+  var measure = document.createElementNS(ns, "svg");
+  measure.setAttribute("width", "0");
+  measure.setAttribute("height", "0");
+  measure.style.position = "absolute";
+  measure.style.left = "-9999px";
+  measure.style.visibility = "hidden";
+  document.body.appendChild(measure);
+
+  var placements = [];
   for(var i = 0; i < w.length; i++){
+    var t = document.createElementNS(ns, "text");
+    t.setAttribute("x", "0");
+    t.setAttribute("y", "0");
+    t.setAttribute("font-family", "Georgia, serif");
+    t.setAttribute("font-size", String(fontSize));
+    t.setAttribute("font-weight", "700");
+    t.textContent = w.charAt(i);
+    measure.appendChild(t);
+    var bbox;
+    try { bbox = t.getBBox(); } catch(e){ bbox = {x:0,y:0,width:0,height:0}; }
+    // Shift the glyph so its bbox centre lands on (cx, cy) — the exact
+    // point around which we then rotate 90°, keeping every char on the
+    // same vertical axis regardless of glyph metrics.
     var cy = letterBox * (i + 0.5);
+    placements.push({
+      x: cx - bbox.x - bbox.width / 2,
+      y: cy - bbox.y - bbox.height / 2,
+      cy: cy
+    });
+    measure.removeChild(t);
+  }
+  document.body.removeChild(measure);
+
+  var letters = "";
+  for(var j = 0; j < w.length; j++){
+    var p = placements[j];
     letters +=
-      '<text x="' + cx + '" y="' + cy + '" fill="' + fg + '" opacity="' + op + '" ' +
+      '<text x="' + p.x + '" y="' + p.y + '" fill="' + fg + '" opacity="' + op + '" ' +
       'font-family="Georgia, serif" font-size="' + fontSize + '" font-weight="700" ' +
-      'text-anchor="middle" dominant-baseline="central" ' +
-      'transform="rotate(90 ' + cx + ' ' + cy + ')">' +
-      xmlEscape(w.charAt(i)) + '</text>';
+      'transform="rotate(90 ' + cx + ' ' + p.cy + ')">' +
+      xmlEscape(w.charAt(j)) + '</text>';
   }
   var svg =
     '<svg xmlns="http://www.w3.org/2000/svg" width="' + tileW + '" height="' + tileH + '" viewBox="0 0 ' + tileW + ' ' + tileH + '">' +

@@ -624,17 +624,48 @@ body.text-invisible #farewell-content ::-moz-selection{
 /* ── /INVISIBLE-TEXT ────────────────────────────────────────────────── */
 
 /* ── SECRET-HIGHLIGHT mode ───────────────────────────────────────────
-   One very faint giant word runs vertically behind #letter-content as
-   a background-image. Each letter spans many rows of the letter text,
-   so the reader discovers the word progressively as they scroll. The
-   native text selection is untouched — Ctrl+A still reveals the letter
-   text cleanly on top of the subtle watermark. Scope: letter only.
-   Revert: delete this rule, the admin UI block, the setupSecretHighlight
-   function, the openLetter / logout call sites, the renderAdmin +
-   saveSettings hooks, and the data fields. */
-body.secret-highlight-on #letter-content{
-  background-repeat:repeat-y;background-position:center top;background-size:100% auto;
+   A single giant vertical word is "virtually" painted across the full
+   width and height of #letter-content but is NEVER shown outside a
+   selection. When the user selects text, JS renders one .secret-rect
+   per selection rect, each carrying the same watermark SVG aligned
+   via background-position so the slice visible through the rect is
+   exactly the piece of the giant word that lives at that location.
+   Effect: select a chunk → you see whichever piece of the secret
+   letter happens to be behind it. Select more / scroll and select
+   more → more of the word is revealed.
+
+   Native selection's own background is suppressed inside the letter
+   so the reveal is clean: transparent highlight + the watermark
+   showing through, only where the user looks.
+
+   Scope: #letter-content only. Revert: delete this block, the admin
+   UI, setupSecretHighlight, the openLetter / logout call sites, the
+   renderAdmin + saveSettings hooks, and the data fields. */
+body.secret-highlight-on #letter-content ::selection{
+  background:transparent!important;
 }
+body.secret-highlight-on #letter-content ::-moz-selection{
+  background:transparent!important;
+}
+body.secret-highlight-on.text-invisible #letter-content ::selection{
+  color:#fff!important;-webkit-text-fill-color:#fff!important;
+}
+body.secret-highlight-on.text-invisible #letter-content ::-moz-selection{
+  color:#fff!important;
+}
+#secret-highlight-layer{
+  position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;z-index:1;
+}
+#secret-highlight-layer .secret-rect{
+  position:absolute;pointer-events:none;overflow:hidden;
+  background-repeat:repeat-y;
+}
+/* Make #letter-content a positioning context and raise text above the
+   overlay. :not() excludes the layer itself from the z-index rule so
+   its own position:absolute isn't clobbered (specificity would win
+   otherwise). */
+body.secret-highlight-on #letter-content{position:relative}
+body.secret-highlight-on #letter-content > :not(#secret-highlight-layer){position:relative;z-index:2}
 /* ── /SECRET-HIGHLIGHT ──────────────────────────────────────────────── */
 .logs-filter{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .logs-filter button{
@@ -1594,11 +1625,15 @@ function setupPrivateMode(){
 // ── /PRIVATE-MODE setup ─────────────────────────────────────────────
 
 // ── SECRET-HIGHLIGHT setup ──────────────────────────────────────────
-// Paints one very faint giant vertical word behind #letter-content as
-// a background-image. Each letter is huge, so it spans many rows of
-// the letter text and the reader discovers the word progressively as
-// they scroll. The native text selection is left alone — Ctrl+A still
-// reveals the letter text cleanly on top of the subtle watermark.
+// One giant vertical word is "virtually" painted across the full width
+// of #letter-content — but invisibly. It's only revealed through the
+// user's current selection: for each getClientRects() rect, we overlay
+// a div carrying the same watermark SVG, scaled to the full width of
+// the letter and positioned so the rect shows exactly the slice of the
+// watermark that lives at that location. Select text → see the slice
+// of the giant letter behind it. Scroll and select more → discover
+// more of the word. Native selection background is suppressed so the
+// reveal is clean (just watermark + text, no highlight colour).
 // Scope: letter only. Revert: delete this block, the admin UI, the
 // openLetter / logout call sites, the renderAdmin + saveSettings
 // hooks, the CSS block, and the data fields.
@@ -1619,7 +1654,7 @@ function buildSecretHighlightSvg(word){
   var tileW = Math.round(letterBox * 0.75);
   var tileH = letterBox * w.length;
   var fg = "#fef3c7";
-  var op = 0.10;
+  var op = 0.55;
   var cx = tileW / 2;
   var letters = "";
   for(var i = 0; i < w.length; i++){
@@ -1647,21 +1682,75 @@ function setupSecretHighlight(){
   var lc = document.getElementById("letter-content");
   if(!lc) return;
   var bgUrl = buildSecretHighlightSvg(word);
-  // Keep any previous inline background values so we can restore them
-  // cleanly on teardown.
-  var prev = {
-    image: lc.style.backgroundImage,
-    repeat: lc.style.backgroundRepeat,
-    size: lc.style.backgroundSize,
-    position: lc.style.backgroundPosition
-  };
-  lc.style.backgroundImage = 'url("' + bgUrl + '")';
+
+  // One virtual watermark stretches across the full width of #letter-content
+  // and is only REVEALED through rectangles we paint over the user's current
+  // selection — nothing painted anywhere else, so the effect is invisible
+  // until the user selects. Each .secret-rect carries the same SVG, with
+  // background-size matching the virtual full-size watermark and
+  // background-position set so each rect shows the exact slice of the
+  // watermark that lives at its location.
+  var layer = document.createElement("div");
+  layer.id = "secret-highlight-layer";
+  lc.appendChild(layer);
   document.body.classList.add("secret-highlight-on");
+
+  // Aspect ratio of one full watermark tile (tileH / tileW). Needed to
+  // figure out how tall the watermark will render when scaled to the
+  // letter's full width.
+  var w = String(word);
+  var tileAspect = (420 * w.length) / Math.round(420 * 0.75);
+
+  var rafPending = false;
+  function scheduleRender(){
+    if(rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(function(){
+      rafPending = false;
+      render();
+    });
+  }
+  function render(){
+    layer.innerHTML = "";
+    var sel = window.getSelection();
+    if(!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+    var range = sel.getRangeAt(0);
+    // Only render when at least one endpoint lives inside the letter so
+    // stray page selections (e.g. admin header) don't paint watermark.
+    if(!lc.contains(range.startContainer) && !lc.contains(range.endContainer)) return;
+    var rects = range.getClientRects();
+    if(!rects || rects.length === 0) return;
+    var lcRect = lc.getBoundingClientRect();
+    var lcWidth = lcRect.width;
+    if(lcWidth <= 0) return;
+    var vh = lcWidth * tileAspect;
+    for(var i = 0; i < rects.length; i++){
+      var r = rects[i];
+      if(r.width <= 0 || r.height <= 0) continue;
+      var localLeft = r.left - lcRect.left;
+      var localTop = r.top - lcRect.top;
+      var div = document.createElement("div");
+      div.className = "secret-rect";
+      div.style.left = localLeft + "px";
+      div.style.top = localTop + "px";
+      div.style.width = r.width + "px";
+      div.style.height = r.height + "px";
+      div.style.backgroundImage = 'url("' + bgUrl + '")';
+      div.style.backgroundSize = lcWidth + "px " + vh + "px";
+      div.style.backgroundPosition = (-localLeft) + "px " + (-localTop) + "px";
+      layer.appendChild(div);
+    }
+  }
+
+  document.addEventListener("selectionchange", scheduleRender);
+  window.addEventListener("scroll", scheduleRender, true);
+  window.addEventListener("resize", scheduleRender);
+
   secretHighlightCleanup = function(){
-    lc.style.backgroundImage = prev.image;
-    lc.style.backgroundRepeat = prev.repeat;
-    lc.style.backgroundSize = prev.size;
-    lc.style.backgroundPosition = prev.position;
+    document.removeEventListener("selectionchange", scheduleRender);
+    window.removeEventListener("scroll", scheduleRender, true);
+    window.removeEventListener("resize", scheduleRender);
+    if(layer && layer.parentNode) layer.parentNode.removeChild(layer);
     document.body.classList.remove("secret-highlight-on");
     secretHighlightCleanup = null;
   };

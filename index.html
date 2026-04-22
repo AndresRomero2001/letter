@@ -56,9 +56,7 @@ body.letter-mode{
 .lock{font-size:48px;margin-bottom:12px}
 h1{font-size:1.4rem;font-weight:600;margin-bottom:6px}
 .sub{color:var(--muted);font-size:.88rem;margin-bottom:28px}
-/* GATE-TEXT: preserve line breaks so the admin can put a multi-line
-   enigma in the subtitle (delete this rule to revert). */
-#gate-sub{white-space:pre-wrap;text-align:center;line-height:1.55}
+#gate-sub{text-align:center;line-height:1.55}
 /* GATE-WIDE: enlarge the login card so multi-line enigmas have room
    to breathe (the default .card is sized for a lone "enter code"
    prompt). Scope: #gate only. Revert: delete this rule. */
@@ -606,6 +604,35 @@ body.secret-highlight-on #letter-content > :not(#secret-highlight-layer){positio
   .papyrus-header-img{height:clamp(90px, 28vw, 160px)}
   .papyrus-footer-img{height:clamp(80px, 22vw, 140px)}
 }
+
+/* =============================================
+   UNROLL-ANIMATION (EXPERIMENTAL) — intro del pergamino.
+   "Una vez por sesión" al abrir la carta: header+footer
+   arrancan pegados (footer translateY negativo), el body se
+   revela con clip-path de arriba a abajo, y al terminar el
+   letter-header + progress-sticky hacen fade-in.
+   Clip-path es puramente visual: no cambia el layout, así
+   que la página no hace scroll mientras "crece" el pergamino.
+   Compatible con text-invisible (el clip solo recorta; si el
+   texto es invisible por CSS, sigue siéndolo al revelarse).
+
+   TO REVERT: borrar este bloque entero, el bloque
+   "UNROLL-ANIMATION" del <script>, y la línea que llama a
+   runPapyrusUnrollAnimation() dentro de openLetter().
+   ============================================= */
+body.papyrus-unrolling .letter-header,
+body.papyrus-unrolling .progress-sticky{
+  opacity:0;pointer-events:none;
+}
+body.papyrus-unrolling .papyrus-body{will-change:clip-path}
+body.papyrus-unrolling .papyrus-footer-img{will-change:transform}
+body.papyrus-unrolled .letter-header,
+body.papyrus-unrolled .progress-sticky{
+  animation:fadeIn .55s ease both;
+}
+/* =============================================
+   END UNROLL-ANIMATION
+   ============================================= */
 </style>
 </head>
 <body>
@@ -614,9 +641,8 @@ body.secret-highlight-on #letter-content > :not(#secret-highlight-layer){positio
 <div id="gate" class="screen">
   <div class="card">
     <div class="lock">&#128274;</div>
-    <!-- GATE-TEXT: ids let applyGateCustomization() overwrite these from data -->
-    <h1 id="gate-title">Una carta para ti</h1>
-    <p class="sub" id="gate-sub">Introduce el código de acceso</p>
+    <h1>Una carta para ti</h1>
+    <p class="sub" id="gate-sub">A veces lo importante se esconde, guarda silencio.<br>Otras veces está justo delante de nosotros, esperando sin prisa.<br>No se revela a quien solo observa, sino a quien se atreve a ir más allá.<br>Hay momentos en los que sentimos que falta algo, sin saber muy bien qué.<br>Quizá nunca estuvo lejos.<br>Quizá solo haya que mirarlo con otros ojos.</p>
     <input type="password" id="code" placeholder="Código" autocomplete="off" autofocus>
     <button class="btn" id="unlock-btn">Entrar</button>
     <p class="error" id="error"></p>
@@ -699,8 +725,6 @@ body.secret-highlight-on #letter-content > :not(#secret-highlight-layer){positio
       <button class="tab" data-tab="edit-letter">Editar carta</button>
       <button class="tab" data-tab="edit-disclaimer">Editar disclaimer</button>
       <button class="tab" data-tab="edit-farewell">Editar despedida</button>
-      <!-- GATE-TEXT: login-screen customization tab -->
-      <button class="tab" data-tab="edit-gate">Pantalla de acceso</button>
       <button class="tab" data-tab="logs">Logs</button>
       <button class="tab" data-tab="settings">Configuración</button>
     </div>
@@ -814,26 +838,6 @@ body.secret-highlight-on #letter-content > :not(#secret-highlight-layer){positio
       </div>
     </div>
 
-    <!-- GATE-TEXT: edit login-screen copy -->
-    <div id="panel-edit-gate" class="panel hidden">
-      <div style="max-width:520px;margin:0 auto">
-        <p style="font-size:.82rem;color:var(--muted);margin-bottom:14px">Texto de la pantalla de acceso (la primera pantalla que ve el usuario antes de introducir el código).</p>
-        <div class="field">
-          <label>Título</label>
-          <input type="text" id="gate-title-input" placeholder="Una carta para ti" style="text-align:left;letter-spacing:0">
-        </div>
-        <div class="field">
-          <label>Subtítulo / enigma</label>
-          <textarea id="gate-sub-input" rows="4" placeholder="Introduce el código de acceso&#10;&#10;(Puedes escribir un enigma o pista en varias líneas)" style="width:100%;padding:14px 18px;border:2px solid rgba(255,255,255,.15);border-radius:14px;background:rgba(255,255,255,.06);color:#fff;font-size:.95rem;letter-spacing:0;text-align:left;outline:none;resize:vertical;min-height:110px;font-family:inherit;line-height:1.55"></textarea>
-          <div style="font-size:.72rem;color:var(--muted);margin-top:6px">Los saltos de línea se conservan en la pantalla de acceso.</div>
-        </div>
-        <div style="margin-top:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-          <button class="btn btn-sm" onclick="saveGate()">Guardar pantalla</button>
-          <span id="gate-save-status" class="status"></span>
-        </div>
-      </div>
-    </div>
-
     <!-- Panel: logs -->
     <div id="panel-logs" class="panel hidden">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;flex-wrap:wrap">
@@ -912,6 +916,22 @@ body.secret-highlight-on #letter-content > :not(#secret-highlight-layer){positio
         </div>
       </div>
       <!-- /SECRET-HIGHLIGHT -->
+      <!-- UNROLL-ANIMATION admin card (delete this whole block to revert) -->
+      <div style="padding:14px 16px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:14px;margin-top:14px">
+        <div class="toggle-row" style="padding:0">
+          <div>
+            <label style="color:#c4b5fd;font-weight:600">Animación de apertura del pergamino</label>
+            <div style="font-size:.78rem;color:var(--muted);margin-top:4px;line-height:1.5">Al entrar en la carta, el pergamino se desenrolla de arriba a abajo revelando el texto. El usuario puede saltarla tocando o pulsando cualquier tecla.</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="unroll-always-toggle"><span class="slider"></span></label>
+        </div>
+        <div style="font-size:.78rem;color:var(--muted);margin-top:6px;padding-left:2px">Si está activo, la animación se reproduce cada vez que se abre la carta. Si está inactivo, solo la primera vez por sesión.</div>
+        <div style="margin-top:12px">
+          <label style="font-size:.8rem;color:var(--muted);display:block;margin-bottom:4px">Duración (segundos)</label>
+          <input type="number" id="unroll-duration-input" min="0.3" max="20" step="0.1" value="1.8" style="width:120px;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.2);color:#fff;font-size:.9rem">
+        </div>
+      </div>
+      <!-- /UNROLL-ANIMATION -->
       <div class="toggle-row danger-section">
         <div>
           <label style="color:var(--err);font-weight:600">Desactivar página</label>
@@ -1028,26 +1048,6 @@ function fetchData(){
     return JSON.parse(decodeURIComponent(escape(raw)));
   });
 }
-// ── GATE-TEXT ───────────────────────────────────────────────────────
-// Paint the login screen with admin-customized title/subtitle pulled from
-// data.gateTitle / data.gateSub. Called from:
-//   - preloadGate() on page load (anonymous fetch, before the user logs in)
-//   - saveGate()    after the admin clicks "Guardar pantalla"
-// Anything missing falls back to whatever the template baked in, so the
-// gate is never blank if the fetch fails.
-function applyGateCustomization(d){
-  if(!d) return;
-  if(d.gateTitle){
-    var t = document.getElementById("gate-title");
-    if(t) t.textContent = d.gateTitle;
-  }
-  if(d.gateSub){
-    var s = document.getElementById("gate-sub");
-    if(s) s.textContent = d.gateSub;
-  }
-}
-// ── /GATE-TEXT ──────────────────────────────────────────────────────
-
 function saveData(obj, _retry){
   if(!ghToken) return Promise.reject(new Error("no-token"));
   var content = JSON.stringify(obj, null, 2);
@@ -1201,10 +1201,6 @@ function applyInvisibleText(){
 function routeAfterLogin(){
   // INVISIBLE-TEXT (delete next line to revert)
   applyInvisibleText();
-  // GATE-TEXT: keep the login card in sync with freshly-fetched data so
-  // the next logout shows the admin's latest customization without a
-  // full page reload.
-  applyGateCustomization(data);
   if(data.pageDisabled && !isAdmin){
     show("disabled-screen");
     return;
@@ -1781,6 +1777,100 @@ function setupScrollExtendSelection(){
 }
 // ── /SCROLL-EXTEND-SELECTION ────────────────────────────────────────
 
+// =============================================
+// UNROLL-ANIMATION (EXPERIMENTAL) — intro del pergamino.
+// Corre una vez por sesión al entrar en la carta, salvo que
+// vaya a aparecer el modal "Continuar" (en ese caso no tiene
+// sentido animar detrás del overlay). El body se revela con
+// clip-path mientras el footer translada desde -bodyHeight a 0,
+// para que arranquen pegados al header y el pergamino se
+// "desenrolle" hacia abajo. letter-header + progress-sticky
+// quedan ocultos durante la animación y hacen fade-in al final.
+// El layout final (altura del documento) no cambia durante la
+// animación: clip-path y transform son visuales, así que la
+// página no hace scroll mientras se desenrolla.
+// Cualquier tecla, click o touch salta al estado final.
+//
+// Para replay durante pruebas:
+//   sessionStorage.removeItem("papyrus_unrolled_v1")
+//
+// TO REVERT: borrar esta función, la llamada dentro de
+// openLetter(), y el bloque CSS "UNROLL-ANIMATION".
+// =============================================
+var PAPYRUS_UNROLL_KEY = "papyrus_unrolled_v1";
+function runPapyrusUnrollAnimation(){
+  // Admin-configurable: data.unrollAlways bypasses the once-per-session
+  // guard, data.unrollDuration (seconds) overrides the default 1.8s.
+  var alwaysOn = !!(data && data.unrollAlways);
+  if(!alwaysOn){
+    try{
+      if(sessionStorage.getItem(PAPYRUS_UNROLL_KEY) === "1") return;
+    }catch(e){ return; }
+  }
+  var scope = document.getElementById("letter-screen");
+  if(!scope) return;
+  var bodyEl = scope.querySelector(".papyrus-body");
+  var footerEl = scope.querySelector(".papyrus-footer-img");
+  if(!bodyEl || !footerEl || typeof bodyEl.animate !== "function") return;
+
+  if(!alwaysOn){
+    try{ sessionStorage.setItem(PAPYRUS_UNROLL_KEY, "1"); }catch(e){}
+  }
+
+  // Add the class BEFORE measuring so letter-header/progress are
+  // already hidden (their fade-in waits for .papyrus-unrolled).
+  document.body.classList.add("papyrus-unrolling");
+  // Force a synchronous layout so offsetHeight is accurate. WAAPI
+  // with fill:"both" applies the first keyframe immediately, which
+  // together prevents a flash of the fully-rendered papyrus between
+  // show("letter-screen") and the first animation frame.
+  var h = bodyEl.offsetHeight;
+  if(h < 40) h = 40;
+
+  var durS = parseFloat(data && data.unrollDuration);
+  if(!isFinite(durS) || durS <= 0) durS = 1.8;
+  if(durS < 0.3) durS = 0.3;
+  if(durS > 20) durS = 20;
+  var duration = Math.round(durS * 1000);
+  var easing = "cubic-bezier(.2,.8,.2,1)";
+
+  var bodyAnim = bodyEl.animate(
+    [{clipPath:"inset(0 0 100% 0)"}, {clipPath:"inset(0 0 0 0)"}],
+    {duration:duration, easing:easing, fill:"both"}
+  );
+  var footerAnim = footerEl.animate(
+    [{transform:"translateY(" + (-h) + "px)"}, {transform:"translateY(0)"}],
+    {duration:duration, easing:easing, fill:"both"}
+  );
+
+  var finished = false;
+  function cleanup(){
+    if(finished) return;
+    finished = true;
+    try{ bodyAnim.finish(); }catch(e){}
+    try{ footerAnim.finish(); }catch(e){}
+    // Drop the WAAPI fills shortly after so no inline styles
+    // remain stuck on the elements (they return to pure CSS).
+    setTimeout(function(){
+      try{ bodyAnim.cancel(); }catch(e){}
+      try{ footerAnim.cancel(); }catch(e){}
+    }, 40);
+    document.body.classList.remove("papyrus-unrolling");
+    document.body.classList.add("papyrus-unrolled");
+    setTimeout(function(){
+      document.body.classList.remove("papyrus-unrolled");
+    }, 700);
+    window.removeEventListener("keydown", onSkip, true);
+    window.removeEventListener("pointerdown", onSkip, true);
+    window.removeEventListener("touchstart", onSkip, true);
+  }
+  function onSkip(){ cleanup(); }
+  bodyAnim.onfinish = cleanup;
+  window.addEventListener("keydown", onSkip, true);
+  window.addEventListener("pointerdown", onSkip, true);
+  window.addEventListener("touchstart", onSkip, true);
+}
+
 function openLetter(){
   var lc = document.getElementById("letter-content");
   renderRichContent(lc, data.letter || "", data.textAlign || "justify");
@@ -1830,6 +1920,10 @@ function openLetter(){
   updateProgressUI(0);
   show("letter-screen");
   window.scrollTo(0,0);
+  // UNROLL-ANIMATION (delete next 2 lines to revert) — skip if the
+  // "Continuar" modal will take over the view anyway.
+  var _willShowContinue = (p > 3 && p < 97);
+  if(!_willShowContinue) runPapyrusUnrollAnimation();
   attachScrollTracking();
   // PRIVATE-MODE (delete next line to revert)
   setupPrivateMode();
@@ -2081,11 +2175,14 @@ function renderAdmin(){
   if(shT) shT.checked = !!data.highlightSecretEnabled;
   var shW = document.getElementById("highlight-secret-word-input");
   if(shW) shW.value = data.highlightSecretWord || "";
-  // GATE-TEXT: populate gate-customization inputs
-  var gt = document.getElementById("gate-title-input");
-  if(gt) gt.value = data.gateTitle || "";
-  var gs = document.getElementById("gate-sub-input");
-  if(gs) gs.value = data.gateSub || "";
+  // UNROLL-ANIMATION (delete next block to revert)
+  var uaT = document.getElementById("unroll-always-toggle");
+  if(uaT) uaT.checked = !!data.unrollAlways;
+  var uaD = document.getElementById("unroll-duration-input");
+  if(uaD){
+    var storedD = parseFloat(data.unrollDuration);
+    uaD.value = (isFinite(storedD) && storedD > 0) ? storedD : 1.8;
+  }
   renderLogs();
   attachAdminScrollTracking();
 }
@@ -2393,22 +2490,6 @@ function saveFarewell(){
     else statusErr(st, r.message||"Error");
   }).catch(function(){ statusErr(st,"Sin conexión"); });
 }
-// GATE-TEXT: admin save for login-screen title/subtitle.
-function saveGate(){
-  var st = document.getElementById("gate-save-status"); statusLoading(st);
-  var t = document.getElementById("gate-title-input").value.trim();
-  var s = document.getElementById("gate-sub-input").value.trim();
-  if(!t){ statusErr(st,"El título no puede estar vacío"); return; }
-  if(!s){ statusErr(st,"El subtítulo no puede estar vacío"); return; }
-  data.gateTitle = t;
-  data.gateSub = s;
-  saveData(data).then(function(r){
-    if(r.content){
-      statusOk(st);
-      applyGateCustomization(data);
-    } else statusErr(st, r.message||"Error");
-  }).catch(function(){ statusErr(st,"Sin conexión"); });
-}
 function saveSettings(){
   var st = document.getElementById("settings-status");
   var newCode = document.getElementById("user-code-input").value.trim();
@@ -2427,6 +2508,13 @@ function saveSettings(){
   // SECRET-HIGHLIGHT (delete next 3 lines to revert)
   data.highlightSecretEnabled = document.getElementById("highlight-secret-toggle").checked;
   data.highlightSecretWord = document.getElementById("highlight-secret-word-input").value.trim().slice(0, 40);
+  // UNROLL-ANIMATION (delete next block to revert)
+  data.unrollAlways = document.getElementById("unroll-always-toggle").checked;
+  var _uaRaw = parseFloat(document.getElementById("unroll-duration-input").value);
+  if(!isFinite(_uaRaw) || _uaRaw <= 0) _uaRaw = 1.8;
+  if(_uaRaw < 0.3) _uaRaw = 0.3;
+  if(_uaRaw > 20) _uaRaw = 20;
+  data.unrollDuration = Math.round(_uaRaw * 10) / 10;
   data.textAlign = getSegmentedValue("text-align-seg") || "justify";
   // Re-render every admin preview (and user view if it's live) with the new
   // alignment, stripping any inline text-align from pasted content so the
@@ -2649,12 +2737,6 @@ document.getElementById("btn-cancel").addEventListener("click", onDisclaimerCanc
 document.getElementById("btn-continue-resume").addEventListener("click", resumeReading);
 document.getElementById("btn-continue-restart").addEventListener("click", restartReading);
 
-// GATE-TEXT: anonymous pre-login fetch. Pulls data.json with no auth so
-// the very first thing the visitor sees has the admin's custom copy. If
-// the fetch fails (offline, rate-limit, etc.) the template defaults stay
-// and behavior is unchanged. Uses the same fetchData pipeline so the
-// sha / content paths are handled identically.
-fetchData().then(applyGateCustomization).catch(function(){});
 
 </script>
 </body>

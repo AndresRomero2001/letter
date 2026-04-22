@@ -944,7 +944,7 @@ body.secret-highlight-on #letter-content > :not(#secret-highlight-layer){positio
 <script>
 var GITHUB_API = "https://api.github.com/repos/AndresRomero2001/letter/contents/data.json";
 var ADMIN_HASH = "d8e02dc389f474320bf6ca93f9ae00fce62e319a52b29e7de04cb0658dda168d";
-var ENC_ADMIN_TOKEN = "df3e52d7c8c07a9ce13a634a72298c63:36d895734c9392305c3ba3ae:3f66e9ec9021c43d6b41a2f161b4d0cf:20124ac5aa4494c5ec2d6a066b6c97894d36df5e57bce6353b9d1fdb924d07f12e58ecc7535b278c";
+var ENC_ADMIN_TOKEN = "82f85f14185fd4450b2c886b2fc10dca:1f8cdaf03fa0dcbeb4a1c2d0:e7eef76bfdd07ad7d34534e38354a914:df81c36247a44aea7a9ddc1e10f8ed5aaeca475d3fe6b7e16b123b24845617e5654a299b5bc04372";
 var ACCEPT_KEY = "letter_accepted_v1";
 var LAST_PERCENT_KEY = "letter_last_percent_v1";
 
@@ -1536,11 +1536,15 @@ function buildSecretHighlightSvg(word){
   var w = String(word || "").trim();
   if(!w) return "";
   var letterBox = 420;           // px of vertical space per letter in SVG units
-  var fontSize = Math.round(letterBox * 0.85);
   var tileW = Math.round(letterBox * 0.75);
+  // Rotated 90°, a glyph's horizontal extent equals its upright vertical
+  // extent — roughly fontSize × 1.2 including descenders. Cap fontSize
+  // well below tileW so rotated letters sit centered with breathing room
+  // instead of being cropped against the tile edges.
+  var fontSize = Math.round(tileW * 0.75);
   var tileH = letterBox * w.length;
   var fg = "#fef3c7";
-  var op = 0.55;
+  var op = 0.35;
   var cx = tileW / 2;
   var letters = "";
   for(var i = 0; i < w.length; i++){
@@ -1601,26 +1605,50 @@ function setupSecretHighlight(){
     var sel = window.getSelection();
     if(!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
     var range = sel.getRangeAt(0);
-    // Only render when at least one endpoint lives inside the letter so
-    // stray page selections (e.g. admin header) don't paint watermark.
-    if(!lc.contains(range.startContainer) && !lc.contains(range.endContainer)) return;
     var rects = range.getClientRects();
     if(!rects || rects.length === 0) return;
     var lcRect = lc.getBoundingClientRect();
     var lcWidth = lcRect.width;
+    var lcHeight = lcRect.height;
     if(lcWidth <= 0) return;
     var vh = lcWidth * tileAspect;
+    // Only allow whole repetitions of the watermark — never a partial
+    // tail at the bottom. maxY is the inclusive upper bound of the Y
+    // region where watermark may be painted (relative to letter-content).
+    // Math.max(1, …) keeps the first rep alive on viewports shorter than
+    // one rep (desktop) where Math.floor would otherwise give 0.
+    var reps = Math.max(1, Math.floor(lcHeight / vh));
+    var maxY = reps * vh;
     for(var i = 0; i < rects.length; i++){
       var r = rects[i];
       if(r.width <= 0 || r.height <= 0) continue;
-      var localLeft = r.left - lcRect.left;
-      var localTop = r.top - lcRect.top;
+      // Skip rects that don't overlap the letter at all — Ctrl+A on the
+      // page selects outside elements too; we want watermark ONLY where
+      // the selection intersects #letter-content.
+      if(r.right <= lcRect.left || r.left >= lcRect.right) continue;
+      if(r.bottom <= lcRect.top || r.top >= lcRect.bottom) continue;
+      // Intersect with letter-content so rects that extend outside it
+      // (e.g. selection wrapping past the right margin) get clipped.
+      var clippedLeft = Math.max(r.left, lcRect.left);
+      var clippedTop = Math.max(r.top, lcRect.top);
+      var clippedRight = Math.min(r.right, lcRect.right);
+      var clippedBottom = Math.min(r.bottom, lcRect.bottom);
+      var localLeft = clippedLeft - lcRect.left;
+      var localTop = clippedTop - lcRect.top;
+      var localRight = clippedRight - lcRect.left;
+      var localBottom = clippedBottom - lcRect.top;
+      // Respect the "no partial rep at bottom" rule — clip against maxY.
+      if(localTop >= maxY) continue;
+      if(localBottom > maxY) localBottom = maxY;
+      var widthPx = localRight - localLeft;
+      var heightPx = localBottom - localTop;
+      if(widthPx <= 0 || heightPx <= 0) continue;
       var div = document.createElement("div");
       div.className = "secret-rect";
       div.style.left = localLeft + "px";
       div.style.top = localTop + "px";
-      div.style.width = r.width + "px";
-      div.style.height = r.height + "px";
+      div.style.width = widthPx + "px";
+      div.style.height = heightPx + "px";
       div.style.backgroundImage = 'url("' + bgUrl + '")';
       div.style.backgroundSize = lcWidth + "px " + vh + "px";
       div.style.backgroundPosition = (-localLeft) + "px " + (-localTop) + "px";
@@ -1642,6 +1670,65 @@ function setupSecretHighlight(){
   };
 }
 // ── /SECRET-HIGHLIGHT setup ─────────────────────────────────────────
+
+// ── SCROLL-EXTEND-SELECTION ─────────────────────────────────────────
+// Native quirk on desktop: while the mouse button is held down to
+// extend a selection, scrolling with the wheel/trackpad does NOT
+// extend the selection — the browser only re-hit-tests on actual
+// mouse movement. The user has to wiggle the mouse a pixel for the
+// selection to grow. To fix that we track the last pointer position
+// and, on scroll while a mouse button is held, dispatch a synthetic
+// mousemove at that same screen position. The browser re-hit-tests
+// against the now-scrolled document and extends the selection.
+// Touch pointers are ignored (mobile selection uses different gesture
+// mechanics). Scope: letter view only. Revert: delete this block, the
+// openLetter call site, and the logout cleanup call.
+var scrollExtendSelectionCleanup = null;
+function setupScrollExtendSelection(){
+  if(scrollExtendSelectionCleanup){ scrollExtendSelectionCleanup(); }
+  if(isAdmin) return;
+  var mouseDown = false;
+  var lastX = 0, lastY = 0;
+  function onPointerDown(e){
+    if(e.pointerType && e.pointerType !== "mouse") return;
+    if(typeof e.button === "number" && e.button !== 0) return;
+    mouseDown = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+  }
+  function onPointerMove(e){
+    if(e.pointerType && e.pointerType !== "mouse") return;
+    lastX = e.clientX;
+    lastY = e.clientY;
+  }
+  function onPointerUp(){ mouseDown = false; }
+  function onScroll(){
+    if(!mouseDown) return;
+    var target = document.elementFromPoint(lastX, lastY);
+    if(!target) return;
+    try {
+      var ev = new MouseEvent("mousemove", {
+        bubbles: true, cancelable: true, view: window,
+        clientX: lastX, clientY: lastY, button: 0, buttons: 1
+      });
+      target.dispatchEvent(ev);
+    } catch(err){}
+  }
+  document.addEventListener("pointerdown", onPointerDown, true);
+  document.addEventListener("pointermove", onPointerMove, true);
+  document.addEventListener("pointerup", onPointerUp, true);
+  document.addEventListener("pointercancel", onPointerUp, true);
+  window.addEventListener("scroll", onScroll, true);
+  scrollExtendSelectionCleanup = function(){
+    document.removeEventListener("pointerdown", onPointerDown, true);
+    document.removeEventListener("pointermove", onPointerMove, true);
+    document.removeEventListener("pointerup", onPointerUp, true);
+    document.removeEventListener("pointercancel", onPointerUp, true);
+    window.removeEventListener("scroll", onScroll, true);
+    scrollExtendSelectionCleanup = null;
+  };
+}
+// ── /SCROLL-EXTEND-SELECTION ────────────────────────────────────────
 
 function openLetter(){
   var lc = document.getElementById("letter-content");
@@ -1697,6 +1784,8 @@ function openLetter(){
   setupPrivateMode();
   // SECRET-HIGHLIGHT (delete next line to revert)
   setupSecretHighlight();
+  // SCROLL-EXTEND-SELECTION (delete next line to revert)
+  setupScrollExtendSelection();
   // Continue modal: show if previous session reached >3% and <97%
   var modal = document.getElementById("continue-modal");
   if(p > 3 && p < 97){
@@ -2486,6 +2575,8 @@ function logout(){
   document.body.classList.remove("text-invisible");
   // SECRET-HIGHLIGHT (delete next line to revert)
   if(typeof secretHighlightCleanup === "function") secretHighlightCleanup();
+  // SCROLL-EXTEND-SELECTION (delete next line to revert)
+  if(typeof scrollExtendSelectionCleanup === "function") scrollExtendSelectionCleanup();
   data=null; isAdmin=false; ghToken=null; fileSha=null;
   document.getElementById("code").value="";
   document.querySelectorAll(".tab").forEach(function(t,i){t.classList.toggle("active", i===0);});

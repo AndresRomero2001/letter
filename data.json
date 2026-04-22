@@ -1244,6 +1244,15 @@
       "role": "user",
       "ip": "88.1.48.71",
       "fp": "c86c3813"
+    },
+    {
+      "ts": "22/4/2026, 19:56:01",
+      "tsISO": "2026-04-22T17:56:01.507Z",
+      "type": "capture",
+      "detail": "focus-loss:window-blur @0%",
+      "role": "user",
+      "ip": "88.1.48.71",
+      "fp": "c86c3813"
     }
   ],
   "textAlign": "justify",

@@ -1613,6 +1613,15 @@
       "role": "admin",
       "ip": "88.1.48.71",
       "fp": "e48c8fd3"
+    },
+    {
+      "ts": "22/4/2026, 22:41:05",
+      "tsISO": "2026-04-22T20:41:05.252Z",
+      "type": "login",
+      "detail": "admin",
+      "role": "admin",
+      "ip": "88.1.48.71",
+      "fp": "c86c3813"
     }
   ],
   "textAlign": "justify",

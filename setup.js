@@ -624,40 +624,17 @@ body.text-invisible #farewell-content ::-moz-selection{
 /* ── /INVISIBLE-TEXT ────────────────────────────────────────────────── */
 
 /* ── SECRET-HIGHLIGHT mode ───────────────────────────────────────────
-   When body.secret-highlight-on is set, the native selection background
-   inside the letter is suppressed. In its place, a JS-managed overlay
-   paints one <div class="secret-rect"> per client-rect of the selection,
-   each filled with a tiled SVG of the secret word rotated -90° (cream
-   letters on deep teal). Text inside the selection stays readable via
-   ::selection { color:#fff } so the letter content reads cleanly on
-   top of the watermark.
-   Scope: only #letter-content — disclaimer, farewell and admin editors
-   are intentionally excluded. To revert cleanly: delete this block, the
-   SECRET-HIGHLIGHT admin UI, the setupSecretHighlight function, the
-   routeAfterLogin call, the renderAdmin + saveSettings hooks, and the
-   highlightSecretEnabled / highlightSecretWord fields in data defaults.
-   All call sites tagged with SECRET-HIGHLIGHT. */
-body.secret-highlight-on #letter-content ::selection{
-  background:transparent!important;color:#fff!important;-webkit-text-fill-color:#fff!important;
+   One very faint giant word runs vertically behind #letter-content as
+   a background-image. Each letter spans many rows of the letter text,
+   so the reader discovers the word progressively as they scroll. The
+   native text selection is untouched — Ctrl+A still reveals the letter
+   text cleanly on top of the subtle watermark. Scope: letter only.
+   Revert: delete this rule, the admin UI block, the setupSecretHighlight
+   function, the openLetter / logout call sites, the renderAdmin +
+   saveSettings hooks, and the data fields. */
+body.secret-highlight-on #letter-content{
+  background-repeat:repeat-y;background-position:center top;background-size:100% auto;
 }
-body.secret-highlight-on #letter-content ::-moz-selection{
-  background:transparent!important;color:#fff!important;
-}
-#secret-highlight-layer{
-  position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;z-index:1;
-}
-#secret-highlight-layer .secret-rect{
-  position:absolute;pointer-events:none;overflow:hidden;border-radius:2px;
-  background-repeat:repeat;background-position:center top;
-  background-color:#0f766e;
-}
-/* Make #letter-content a positioning context so overlay rects can be
-   placed relative to it (and scroll with it naturally). Also raise text
-   above the overlay. The :not() exclusion is important: without it, the
-   layer itself gets position:relative from this rule and loses its
-   absolute positioning (its own #id rule has lower specificity). */
-body.secret-highlight-on #letter-content{position:relative}
-body.secret-highlight-on #letter-content > :not(#secret-highlight-layer){position:relative;z-index:2}
 /* ── /SECRET-HIGHLIGHT ──────────────────────────────────────────────── */
 .logs-filter{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .logs-filter button{
@@ -1533,13 +1510,25 @@ function setupPrivateMode(){
   var ttrEnabled = !!(data && data.touchToRead) && ("ontouchstart" in window);
   var ttrHideTimer = null;
   var ttrHideDelay = 500;
+  function ttrHasActiveSelection(){
+    // While the reader is in the middle of a text selection (they did
+    // a long-press to highlight, then started scrolling to extend it),
+    // they NEED to see the text. Blurring now makes it impossible to
+    // read what they're selecting. getSelection().isCollapsed is true
+    // when there's no real selection.
+    var sel = window.getSelection && window.getSelection();
+    return !!(sel && sel.rangeCount > 0 && !sel.isCollapsed);
+  }
+  function ttrDoHide(reason){
+    if(ttrHasActiveSelection()) return false;
+    document.body.classList.add("private-blurred");
+    logCapture("touch-release:"+reason);
+    return true;
+  }
   function ttrScheduleHide(reason){
     if(!ttrEnabled) return;
     if(ttrHideTimer) clearTimeout(ttrHideTimer);
-    ttrHideTimer = setTimeout(function(){
-      document.body.classList.add("private-blurred");
-      logCapture("touch-release:"+reason);
-    }, ttrHideDelay);
+    ttrHideTimer = setTimeout(function(){ ttrDoHide(reason); }, ttrHideDelay);
   }
   function ttrShow(){
     if(!ttrEnabled) return;
@@ -1555,17 +1544,22 @@ function setupPrivateMode(){
     if(!ttrEnabled) return;
     if(ttrHideTimer){
       clearTimeout(ttrHideTimer);
-      ttrHideTimer = setTimeout(function(){
-        document.body.classList.add("private-blurred");
-        logCapture("touch-release:scroll-idle");
-      }, ttrHideDelay);
+      ttrHideTimer = setTimeout(function(){ ttrDoHide("scroll-idle"); }, ttrHideDelay);
     }
+  }
+  function onTtrSelChange(){
+    // When the user starts a selection while the screen is blurred,
+    // reveal the text immediately so they can actually see what they
+    // are selecting. This handles the long-press-then-scroll flow.
+    if(!ttrEnabled) return;
+    if(ttrHasActiveSelection()) ttrShow();
   }
   if(ttrEnabled){
     document.addEventListener("touchstart", onTouchStart, {passive:true});
     document.addEventListener("touchend", onTouchEnd, {passive:true});
     document.addEventListener("touchcancel", onTouchCancel, {passive:true});
     window.addEventListener("scroll", onTouchScroll, {passive:true});
+    document.addEventListener("selectionchange", onTtrSelChange);
   }
   // ── /TOUCH-TO-READ ───────────────────────────────────────────────
   // Optional one-time "session started with private mode" log so the timeline
@@ -1588,6 +1582,7 @@ function setupPrivateMode(){
       document.removeEventListener("touchend", onTouchEnd);
       document.removeEventListener("touchcancel", onTouchCancel);
       window.removeEventListener("scroll", onTouchScroll);
+      document.removeEventListener("selectionchange", onTtrSelChange);
     }
     if(ttrHideTimer) clearTimeout(ttrHideTimer);
     // /TOUCH-TO-READ cleanup
@@ -1599,38 +1594,46 @@ function setupPrivateMode(){
 // ── /PRIVATE-MODE setup ─────────────────────────────────────────────
 
 // ── SECRET-HIGHLIGHT setup ──────────────────────────────────────────
-// Replaces the native selection background inside #letter-content with a
-// per-rect overlay that tiles the admin's secret word vertically (cream
-// on teal). Active only on the user's letter view, when enabled AND a
-// word is set. See CSS block tagged SECRET-HIGHLIGHT for the companion
-// styles. Revert: delete this whole block and its call sites.
+// Paints one very faint giant vertical word behind #letter-content as
+// a background-image. Each letter is huge, so it spans many rows of
+// the letter text and the reader discovers the word progressively as
+// they scroll. The native text selection is left alone — Ctrl+A still
+// reveals the letter text cleanly on top of the subtle watermark.
+// Scope: letter only. Revert: delete this block, the admin UI, the
+// openLetter / logout call sites, the renderAdmin + saveSettings
+// hooks, the CSS block, and the data fields.
 var secretHighlightCleanup = null;
 function xmlEscape(s){
   return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&apos;");
 }
 function buildSecretHighlightSvg(word){
-  // Tile: fixed width, dynamic height so the rotated word fits inside.
-  // Letters 's','e','c','r','e','t','o' horizontally at font-size L are
-  // roughly L*0.55 each in serif. After rotate(-90) around center, that
-  // total width becomes the tile's vertical extent. We add padding so
-  // the word doesn't touch edges when repeated.
+  // One stacked-letter column: each letter rendered as its own <text>
+  // element, rotated +90 (so the reader tilts their head to the right
+  // to read), big enough that a single letter spans many rows of the
+  // actual letter text. Very low opacity so the effect is "a bit hard
+  // to notice" per spec.
   var w = String(word || "").trim();
   if(!w) return "";
-  var letterH = 18;
-  var approxTextPx = w.length * letterH * 0.62;
-  var padding = 10;
-  var tileH = Math.max(Math.round(approxTextPx + padding * 2), 80);
-  var tileW = 22;
-  var bg = "#0f766e";
+  var letterBox = 420;           // px of vertical space per letter in SVG units
+  var fontSize = Math.round(letterBox * 0.85);
+  var tileW = Math.round(letterBox * 0.75);
+  var tileH = letterBox * w.length;
   var fg = "#fef3c7";
+  var op = 0.10;
   var cx = tileW / 2;
-  var cy = tileH / 2;
+  var letters = "";
+  for(var i = 0; i < w.length; i++){
+    var cy = letterBox * (i + 0.5);
+    letters +=
+      '<text x="' + cx + '" y="' + cy + '" fill="' + fg + '" opacity="' + op + '" ' +
+      'font-family="Georgia, serif" font-size="' + fontSize + '" font-weight="700" ' +
+      'text-anchor="middle" dominant-baseline="central" ' +
+      'transform="rotate(90 ' + cx + ' ' + cy + ')">' +
+      xmlEscape(w.charAt(i)) + '</text>';
+  }
   var svg =
     '<svg xmlns="http://www.w3.org/2000/svg" width="' + tileW + '" height="' + tileH + '" viewBox="0 0 ' + tileW + ' ' + tileH + '">' +
-    '<rect width="100%" height="100%" fill="' + bg + '"/>' +
-    '<text x="' + cx + '" y="' + cy + '" fill="' + fg + '" font-family="Georgia, serif" font-size="' + letterH + '" letter-spacing="1.5" text-anchor="middle" dominant-baseline="central" transform="rotate(-90 ' + cx + ' ' + cy + ')">' +
-    xmlEscape(w) +
-    '</text>' +
+    letters +
     '</svg>';
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
@@ -1643,54 +1646,22 @@ function setupSecretHighlight(){
   if(!word) return;
   var lc = document.getElementById("letter-content");
   if(!lc) return;
-  document.body.classList.add("secret-highlight-on");
   var bgUrl = buildSecretHighlightSvg(word);
-  // Overlay container lives INSIDE letter-content so its absolute children
-  // naturally scroll with the letter. letter-content is forced to
-  // position:relative by the CSS above.
-  var layer = document.getElementById("secret-highlight-layer");
-  if(!layer){
-    layer = document.createElement("div");
-    layer.id = "secret-highlight-layer";
-    lc.appendChild(layer);
-  }
-  function clearRects(){
-    while(layer.firstChild) layer.removeChild(layer.firstChild);
-  }
-  function render(){
-    clearRects();
-    var sel = window.getSelection && window.getSelection();
-    if(!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
-    var range = sel.getRangeAt(0);
-    // Only render when the selection is (at least partially) inside the
-    // letter. commonAncestorContainer keeps us from painting overlays
-    // when the user selects text in the continue-modal or elsewhere.
-    if(!lc.contains(range.commonAncestorContainer)) return;
-    var rects = range.getClientRects();
-    if(!rects || rects.length === 0) return;
-    var originRect = lc.getBoundingClientRect();
-    for(var i = 0; i < rects.length; i++){
-      var r = rects[i];
-      if(r.width < 1 || r.height < 1) continue;
-      var d = document.createElement("div");
-      d.className = "secret-rect";
-      // Coords relative to letter-content, which is position:relative.
-      d.style.left = (r.left - originRect.left) + "px";
-      d.style.top = (r.top - originRect.top) + "px";
-      d.style.width = r.width + "px";
-      d.style.height = r.height + "px";
-      d.style.backgroundImage = 'url("' + bgUrl + '")';
-      layer.appendChild(d);
-    }
-  }
-  function onSelChange(){ render(); }
-  function onResize(){ render(); }
-  document.addEventListener("selectionchange", onSelChange);
-  window.addEventListener("resize", onResize);
+  // Keep any previous inline background values so we can restore them
+  // cleanly on teardown.
+  var prev = {
+    image: lc.style.backgroundImage,
+    repeat: lc.style.backgroundRepeat,
+    size: lc.style.backgroundSize,
+    position: lc.style.backgroundPosition
+  };
+  lc.style.backgroundImage = 'url("' + bgUrl + '")';
+  document.body.classList.add("secret-highlight-on");
   secretHighlightCleanup = function(){
-    document.removeEventListener("selectionchange", onSelChange);
-    window.removeEventListener("resize", onResize);
-    if(layer && layer.parentNode){ layer.parentNode.removeChild(layer); }
+    lc.style.backgroundImage = prev.image;
+    lc.style.backgroundRepeat = prev.repeat;
+    lc.style.backgroundSize = prev.size;
+    lc.style.backgroundPosition = prev.position;
     document.body.classList.remove("secret-highlight-on");
     secretHighlightCleanup = null;
   };

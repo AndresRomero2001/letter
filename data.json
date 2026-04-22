@@ -1632,5 +1632,7 @@
   "highlightSecretEnabled": true,
   "highlightSecretWord": "Sorpresa <3",
   "gateTitle": "Una carta para ti",
-  "gateSub": "A veces lo importante se esconde, guarda silencio.\nOtras veces está justo delante de nosotros, esperando sin prisa.\nNo se revela a quien solo observa, sino a quien se atreve a ir más allá.\nHay momentos en los que sentimos que falta algo, sin saber muy bien qué.\nQuizá nunca estuvo lejos.\nQuizá solo haya que mirarlo con otros ojos."
+  "gateSub": "A veces lo importante se esconde, guarda silencio.\nOtras veces está justo delante de nosotros, esperando sin prisa.\nNo se revela a quien solo observa, sino a quien se atreve a ir más allá.\nHay momentos en los que sentimos que falta algo, sin saber muy bien qué.\nQuizá nunca estuvo lejos.\nQuizá solo haya que mirarlo con otros ojos.",
+  "unrollAlways": true,
+  "unrollDuration": 6
 }

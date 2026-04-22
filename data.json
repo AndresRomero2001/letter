@@ -1622,51 +1622,6 @@
       "role": "admin",
       "ip": "88.1.48.71",
       "fp": "c86c3813"
-    },
-    {
-      "ts": "22/4/2026, 22:41:33",
-      "tsISO": "2026-04-22T20:41:33.341Z",
-      "type": "login",
-      "detail": "user",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "bccc52c4"
-    },
-    {
-      "ts": "22/4/2026, 22:41:34",
-      "tsISO": "2026-04-22T20:41:34.253Z",
-      "type": "disclaimer_shown",
-      "detail": "",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "bccc52c4"
-    },
-    {
-      "ts": "22/4/2026, 22:41:35",
-      "tsISO": "2026-04-22T20:41:35.267Z",
-      "type": "read",
-      "detail": "Aceptó leer la carta",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "bccc52c4"
-    },
-    {
-      "ts": "22/4/2026, 22:41:35",
-      "tsISO": "2026-04-22T20:41:35.270Z",
-      "type": "capture",
-      "detail": "session-start @0%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "bccc52c4"
-    },
-    {
-      "ts": "22/4/2026, 22:41:41",
-      "tsISO": "2026-04-22T20:41:41.450Z",
-      "type": "capture",
-      "detail": "focus-loss:window-blur @0%",
-      "role": "user",
-      "ip": "88.1.48.71",
-      "fp": "bccc52c4"
     }
   ],
   "textAlign": "justify",
@@ -1679,5 +1634,5 @@
   "gateTitle": "Una carta para ti",
   "gateSub": "A veces lo importante se esconde, guarda silencio.\nOtras veces está justo delante de nosotros, esperando sin prisa.\nNo se revela a quien solo observa, sino a quien se atreve a ir más allá.\nHay momentos en los que sentimos que falta algo, sin saber muy bien qué.\nQuizá nunca estuvo lejos.\nQuizá solo haya que mirarlo con otros ojos.",
   "unrollAlways": true,
-  "unrollDuration": 6
+  "unrollDuration": 20
 }

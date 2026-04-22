@@ -7,7 +7,7 @@
   "progress": {
     "maxPercent": 100,
     "lastPercent": 11.459129106187929,
-    "lastUpdated": "2026-04-22T17:57:54.577Z",
+    "lastUpdated": "2026-04-22T17:59:05.782Z",
     "finishedLogged": true,
     "lastLoggedPercent": 45.86827205618864
   },
@@ -1336,13 +1336,13 @@
       "fp": "c86c3813"
     },
     {
-      "ts": "22/4/2026, 19:58:04",
-      "tsISO": "2026-04-22T17:58:04.657Z",
-      "type": "login",
-      "detail": "admin",
-      "role": "admin",
+      "ts": "22/4/2026, 19:59:05",
+      "tsISO": "2026-04-22T17:59:05.786Z",
+      "type": "capture",
+      "detail": "focus-loss:visibilitychange @11%",
+      "role": "user",
       "ip": "88.1.48.71",
-      "fp": "9483450f"
+      "fp": "c86c3813"
     }
   ],
   "textAlign": "justify",
@@ -1351,7 +1351,5 @@
   "invisibleText": true,
   "touchToRead": true,
   "highlightSecretEnabled": true,
-  "highlightSecretWord": "Sorpresa <3",
-  "gateTitle": "Una carta para ti",
-  "gateSub": "A veces lo importante se esconde, guarda silencio.\nOtras veces está justo delante de nosotros, esperando sin prisa.\nNo se revela a quien solo observa, sino a quien se atreve a ir más allá.\nHay momentos en los que sentimos que falta algo, sin saber muy bien qué.\nQuizá nunca estuvo lejos.\nQuizá solo haya que mirarlo con otros ojos."
+  "highlightSecretWord": "Sorpresa <3"
 }

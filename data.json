@@ -1937,6 +1937,15 @@
       "role": "user",
       "ip": "90.160.106.105",
       "fp": "d57d2142"
+    },
+    {
+      "ts": "3/5/2026, 20:38:27",
+      "tsISO": "2026-05-03T18:38:27.219Z",
+      "type": "capture",
+      "detail": "focus-loss:window-blur @7%",
+      "role": "user",
+      "ip": "90.160.106.105",
+      "fp": "d57d2142"
     }
   ],
   "textAlign": "justify",

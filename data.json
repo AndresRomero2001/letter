@@ -1847,6 +1847,15 @@
       "role": "user",
       "ip": "90.160.106.105",
       "fp": "d57d2142"
+    },
+    {
+      "ts": "3/5/2026, 19:24:31",
+      "tsISO": "2026-05-03T17:24:31.810Z",
+      "type": "disclaimer_shown",
+      "detail": "",
+      "role": "user",
+      "ip": "90.160.106.105",
+      "fp": "d57d2142"
     }
   ],
   "textAlign": "justify",

@@ -1802,6 +1802,15 @@
       "role": "user",
       "ip": "90.160.106.105",
       "fp": "4bfd9484"
+    },
+    {
+      "ts": "3/5/2026, 19:21:01",
+      "tsISO": "2026-05-03T17:21:01.808Z",
+      "type": "capture",
+      "detail": "focus-loss:window-blur @0%",
+      "role": "user",
+      "ip": "90.160.106.105",
+      "fp": "4bfd9484"
     }
   ],
   "textAlign": "justify",

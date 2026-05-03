@@ -1766,6 +1766,33 @@
       "role": "user",
       "ip": "90.160.106.105",
       "fp": "4bfd9484"
+    },
+    {
+      "ts": "3/5/2026, 19:20:52",
+      "tsISO": "2026-05-03T17:20:52.534Z",
+      "type": "progress",
+      "detail": "Empezó de nuevo desde 71%",
+      "role": "user",
+      "ip": "90.160.106.105",
+      "fp": "4bfd9484"
+    },
+    {
+      "ts": "3/5/2026, 19:20:53",
+      "tsISO": "2026-05-03T17:20:53.031Z",
+      "type": "capture",
+      "detail": "touch-release:touchend @0%",
+      "role": "user",
+      "ip": "90.160.106.105",
+      "fp": "4bfd9484"
+    },
+    {
+      "ts": "3/5/2026, 19:20:57",
+      "tsISO": "2026-05-03T17:20:57.967Z",
+      "type": "capture",
+      "detail": "touch-release:touchend @0%",
+      "role": "user",
+      "ip": "90.160.106.105",
+      "fp": "4bfd9484"
     }
   ],
   "textAlign": "justify",

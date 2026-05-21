@@ -1972,6 +1972,15 @@
       "role": "admin",
       "ip": "90.160.183.13",
       "fp": "dc80ada5"
+    },
+    {
+      "ts": "21/5/2026, 21:36:40",
+      "tsISO": "2026-05-21T19:36:40.042Z",
+      "type": "login",
+      "detail": "user",
+      "role": "user",
+      "ip": "90.160.183.13",
+      "fp": "dc80ada5"
     }
   ],
   "textAlign": "justify",

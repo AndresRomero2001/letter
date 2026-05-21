@@ -1964,6 +1964,15 @@
       "role": "user",
       "ip": "90.160.183.13",
       "fp": "dc80ada5"
+    },
+    {
+      "ts": "21/5/2026, 21:33:36",
+      "tsISO": "2026-05-21T19:33:36.534Z",
+      "type": "login",
+      "detail": "admin",
+      "role": "admin",
+      "ip": "90.160.183.13",
+      "fp": "dc80ada5"
     }
   ],
   "textAlign": "justify",

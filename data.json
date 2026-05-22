@@ -2008,6 +2008,15 @@
       "role": "user",
       "ip": "90.160.183.13",
       "fp": "dc80ada5"
+    },
+    {
+      "ts": "22/5/2026, 9:03:15",
+      "tsISO": "2026-05-22T07:03:15.149Z",
+      "type": "login",
+      "detail": "admin",
+      "role": "admin",
+      "ip": "88.1.48.71",
+      "fp": "dc80ada5"
     }
   ],
   "textAlign": "justify",

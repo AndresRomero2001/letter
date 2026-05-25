@@ -2035,6 +2035,15 @@
       "role": "admin",
       "ip": "88.1.48.71",
       "fp": "fa4d36f5"
+    },
+    {
+      "ts": "25/5/2026, 22:51:52",
+      "tsISO": "2026-05-25T20:51:52.342Z",
+      "type": "login",
+      "detail": "admin",
+      "role": "admin",
+      "ip": "88.1.48.71",
+      "fp": "fa4d36f5"
     }
   ],
   "textAlign": "justify",

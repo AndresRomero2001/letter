@@ -2089,6 +2089,15 @@
       "role": "user",
       "ip": "95.22.147.87",
       "fp": "dc80ada5"
+    },
+    {
+      "ts": "29/5/2026, 23:04:39",
+      "tsISO": "2026-05-29T21:04:39.583Z",
+      "type": "progress",
+      "detail": "20% leído",
+      "role": "user",
+      "ip": "95.22.147.87",
+      "fp": "dc80ada5"
     }
   ],
   "textAlign": "justify",

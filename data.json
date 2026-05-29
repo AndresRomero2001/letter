@@ -7,7 +7,7 @@
   "progress": {
     "maxPercent": 100,
     "lastPercent": 0,
-    "lastUpdated": "2026-05-29T21:12:38.777Z",
+    "lastUpdated": "2026-05-29T23:39:53.048Z",
     "finishedLogged": false
   },
   "logs": [
@@ -2383,6 +2383,15 @@
       "tsISO": "2026-05-29T21:12:37.753Z",
       "type": "capture",
       "detail": "focus-loss:window-blur @0%",
+      "role": "user",
+      "ip": "95.22.147.87",
+      "fp": "dc80ada5"
+    },
+    {
+      "ts": "30/5/2026, 1:39:53",
+      "tsISO": "2026-05-29T23:39:53.125Z",
+      "type": "capture",
+      "detail": "focus-loss:visibilitychange @0%",
       "role": "user",
       "ip": "95.22.147.87",
       "fp": "dc80ada5"

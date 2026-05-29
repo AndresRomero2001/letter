@@ -2350,6 +2350,15 @@
       "role": "user",
       "ip": "95.22.147.87",
       "fp": "dc80ada5"
+    },
+    {
+      "ts": "29/5/2026, 23:12:23",
+      "tsISO": "2026-05-29T21:12:23.722Z",
+      "type": "capture",
+      "detail": "focus-loss:window-blur @8%",
+      "role": "user",
+      "ip": "95.22.147.87",
+      "fp": "dc80ada5"
     }
   ],
   "textAlign": "justify",

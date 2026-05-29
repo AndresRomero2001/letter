@@ -2179,6 +2179,15 @@
       "role": "user",
       "ip": "95.22.147.87",
       "fp": "dc80ada5"
+    },
+    {
+      "ts": "29/5/2026, 23:10:59",
+      "tsISO": "2026-05-29T21:10:59.831Z",
+      "type": "capture",
+      "detail": "context-menu @0%",
+      "role": "user",
+      "ip": "95.22.147.87",
+      "fp": "dc80ada5"
     }
   ],
   "textAlign": "justify",

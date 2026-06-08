@@ -2422,6 +2422,15 @@
       "role": "admin",
       "ip": "88.1.59.66",
       "fp": "dc80ada5"
+    },
+    {
+      "ts": "8/6/2026, 23:58:46",
+      "tsISO": "2026-06-08T21:58:46.753Z",
+      "type": "login",
+      "detail": "admin",
+      "role": "admin",
+      "ip": "90.167.167.241",
+      "fp": "97a23a32"
     }
   ],
   "textAlign": "justify",
